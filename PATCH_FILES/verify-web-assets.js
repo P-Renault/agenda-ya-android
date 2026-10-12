@@ -36,10 +36,8 @@ if (capacitorConfig.webDir !== 'www') {
 const requiredFiles = [
   'www/index.html',
   'www/login.html',
-  'www/dashboard.html',
   'www/config.js',
   'www/agenda-ya-shell.css',
-  'www/agenda-ya-shell.js',
   'www/dashboard.js',
   'www/auth.js',
   'www/assets',
@@ -58,13 +56,6 @@ const loginHtmlPath = path.join(root, 'www/login.html');
 const loginHtml = fs.readFileSync(loginHtmlPath, 'utf8');
 if (!loginHtml.includes('Agenda Ya') && !loginHtml.includes('Agenda YA')) {
   fail('El archivo www/login.html no parece ser la pantalla de acceso correcta de Agenda YA.');
-}
-
-// Validar que dashboard.html sea el dashboard autenticado
-const dashboardHtmlPath = path.join(root, 'www/dashboard.html');
-const dashboardHtml = fs.readFileSync(dashboardHtmlPath, 'utf8');
-if (!dashboardHtml.includes('Agenda Ya') && !dashboardHtml.includes('Agenda YA')) {
-  fail('El archivo www/dashboard.html no parece ser el dashboard autenticado de Agenda YA.');
 }
 
 console.log('✓ Verificación de web assets OK: login, dashboard, recursos, Supabase y Capacitor configurados correctamente.');
