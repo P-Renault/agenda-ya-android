@@ -3,7 +3,9 @@ name: Agenda YA Android - APK de pruebas
 on:
   workflow_dispatch:
   push:
-    branches: [ main ]
+    branches:
+      - main
+      - fix/android-packaging
 
 permissions:
   contents: read
@@ -11,6 +13,7 @@ permissions:
 jobs:
   build-debug-apk:
     runs-on: ubuntu-latest
+
     steps:
       - name: Descargar código
         uses: actions/checkout@v4
@@ -18,17 +21,24 @@ jobs:
       - name: Configurar Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 22
-        
+          node-version: 20
 
       - name: Configurar Java
         uses: actions/setup-java@v4
         with:
           distribution: temurin
-          java-version: '21'
+          java-version: '17'
 
-      - name: Instalar dependencias
-        run: npm install --no-audit --no-fund
+      - name: Regenerar dependencias
+        run: |
+          rm -f package-lock.json
+          npm cache clean --force
+          npm install --no-audit --no-fund --prefer-online
+
+      - name: Verificar archivos web
+        run: |
+          test -f www/index.html
+          test -f capacitor.config.json
 
       - name: Crear proyecto Android nativo
         run: npx cap add android
@@ -40,7 +50,7 @@ jobs:
         working-directory: android
         run: ./gradlew assembleDebug --no-daemon
 
-      - name: Publicar APK como artefacto
+      - name: Publicar APK
         uses: actions/upload-artifact@v4
         with:
           name: AgendaYA-Android-debug-APK
