@@ -379,9 +379,25 @@
       } catch (_) {}
     };
 
-    // The Android package embeds the authenticated dashboard shell in login.html.
-    // Do not redirect to dashboard.html: this package does not include the production
-    // standalone dashboard page, and redirecting creates a login/profile-choice loop.
+    // auth.js currently renders its dashboard shell inside login.html.
+    // The canonical dashboard is dashboard.html, so redirect as soon as that shell becomes active.
+    const goDashboard = () => {
+      const app = document.getElementById("ayApp");
+      if (!app || window.location.pathname.endsWith("/dashboard.html")) return;
+      const visible = !app.hidden && getComputedStyle(app).display !== "none";
+      if (!visible) return;
+      if (pending()) return; // customer onboarding must resume the pending reservation instead.
+      if (window.__AY_B12_7_DASHBOARD_REDIRECT__) return;
+      window.__AY_B12_7_DASHBOARD_REDIRECT__ = true;
+      window.location.replace(new URL("dashboard.html", window.location.href).href);
+    };
+
+    const watch = new MutationObserver(goDashboard);
+    window.addEventListener("DOMContentLoaded", () => {
+      const app = document.getElementById("ayApp");
+      if (app) watch.observe(app, { attributes: true, attributeFilter: ["hidden", "style", "class"] });
+      goDashboard();
+
       // Resume after customer profile save. auth.js writes the success message and
       // normally redirects to explorer.html; this bridge preserves the pending booking flow.
       const customerStatus = document.getElementById("ayCustomerStatus");
@@ -391,7 +407,7 @@
         };
         new MutationObserver(resumeIfSaved).observe(customerStatus, { childList: true, characterData: true, subtree: true, attributes: true });
       }
-      setInterval(resumeAfterAuth, 250);
+      setInterval(() => { goDashboard(); resumeAfterAuth(); }, 250);
       setTimeout(resumeAfterAuth, 0);
     });
   })();
