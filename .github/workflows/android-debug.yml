@@ -38,6 +38,9 @@ jobs:
       - name: Verificar archivos web
         run: |
           test -f www/index.html
+          test -f www/login.html
+          test -f www/dashboard.html
+          test -f www/config.js
           test -f capacitor.config.json
 
       - name: Crear proyecto Android nativo
