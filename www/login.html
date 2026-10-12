@@ -379,11 +379,9 @@
       } catch (_) {}
     };
 
-    // Android/web package compatibility:
-    // The canonical dashboard.html was absent from this package. Keep the
-    // authenticated app shell rendered by auth.js in login.html instead of
-    // redirecting to a missing local file.
-    window.addEventListener("DOMContentLoaded", () => {
+    // The Android package embeds the authenticated dashboard shell in login.html.
+    // Do not redirect to dashboard.html: this package does not include the production
+    // standalone dashboard page, and redirecting creates a login/profile-choice loop.
       // Resume after customer profile save. auth.js writes the success message and
       // normally redirects to explorer.html; this bridge preserves the pending booking flow.
       const customerStatus = document.getElementById("ayCustomerStatus");
