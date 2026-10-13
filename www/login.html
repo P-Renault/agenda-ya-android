@@ -228,8 +228,6 @@
 }
 </style>
 
-<link rel="stylesheet" href="./android-global-mobile-safe-area.css">
-<script defer src="./android-global-mobile-safe-area.js"></script>
 </head>
 <body>
   <section class="ay-auth" id="ayAuthView" aria-label="Acceso Agenda Ya">
@@ -239,7 +237,7 @@
     <div class="ay-auth-wrap">
       <div class="ay-auth-topbar">
         <button class="ay-auth-back" id="ayAuthBack" type="button" aria-label="Volver a Agenda YA"
-      onclick="if(history.length>1){history.back()}else{location.href='inicio-publico.html'}">
+      onclick="if(history.length>1){history.back()}else{location.href='landing.html'}">
       <svg viewBox="0 0 32 32" aria-hidden="true"><path d="M20.5 6.5 11 16l9.5 9.5M12 16h17"/></svg>
       <span>Volver a Agenda YA</span>
     </button>
@@ -381,15 +379,14 @@
       } catch (_) {}
     };
 
-    // B12.7: el dashboard de negocio canónico existe en este paquete Android.
-    // Redirigir al dashboard real cuando auth.js muestre el shell autenticado,
-    // preservando siempre la reserva pendiente del flujo de cliente.
+    // auth.js currently renders its dashboard shell inside login.html.
+    // The canonical dashboard is dashboard.html, so redirect as soon as that shell becomes active.
     const goDashboard = () => {
       const app = document.getElementById("ayApp");
       if (!app || window.location.pathname.endsWith("/dashboard.html")) return;
       const visible = !app.hidden && getComputedStyle(app).display !== "none";
       if (!visible) return;
-      if (pending()) return;
+      if (pending()) return; // customer onboarding must resume the pending reservation instead.
       if (window.__AY_B12_7_DASHBOARD_REDIRECT__) return;
       window.__AY_B12_7_DASHBOARD_REDIRECT__ = true;
       window.location.replace(new URL("dashboard.html", window.location.href).href);
@@ -401,7 +398,8 @@
       if (app) watch.observe(app, { attributes: true, attributeFilter: ["hidden", "style", "class"] });
       goDashboard();
 
-      // Mantener la reserva pendiente tras guardar el perfil de cliente.
+      // Resume after customer profile save. auth.js writes the success message and
+      // normally redirects to explorer.html; this bridge preserves the pending booking flow.
       const customerStatus = document.getElementById("ayCustomerStatus");
       if (customerStatus) {
         const resumeIfSaved = () => {
