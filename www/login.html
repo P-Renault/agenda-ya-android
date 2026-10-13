@@ -381,13 +381,27 @@
       } catch (_) {}
     };
 
-    // Android/web package compatibility:
-    // The canonical dashboard.html was absent from this package. Keep the
-    // authenticated app shell rendered by auth.js in login.html instead of
-    // redirecting to a missing local file.
+    // B12.7: el dashboard de negocio canónico existe en este paquete Android.
+    // Redirigir al dashboard real cuando auth.js muestre el shell autenticado,
+    // preservando siempre la reserva pendiente del flujo de cliente.
+    const goDashboard = () => {
+      const app = document.getElementById("ayApp");
+      if (!app || window.location.pathname.endsWith("/dashboard.html")) return;
+      const visible = !app.hidden && getComputedStyle(app).display !== "none";
+      if (!visible) return;
+      if (pending()) return;
+      if (window.__AY_B12_7_DASHBOARD_REDIRECT__) return;
+      window.__AY_B12_7_DASHBOARD_REDIRECT__ = true;
+      window.location.replace(new URL("dashboard.html", window.location.href).href);
+    };
+
+    const watch = new MutationObserver(goDashboard);
     window.addEventListener("DOMContentLoaded", () => {
-      // Resume after customer profile save. auth.js writes the success message and
-      // normally redirects to explorer.html; this bridge preserves the pending booking flow.
+      const app = document.getElementById("ayApp");
+      if (app) watch.observe(app, { attributes: true, attributeFilter: ["hidden", "style", "class"] });
+      goDashboard();
+
+      // Mantener la reserva pendiente tras guardar el perfil de cliente.
       const customerStatus = document.getElementById("ayCustomerStatus");
       if (customerStatus) {
         const resumeIfSaved = () => {
@@ -395,7 +409,7 @@
         };
         new MutationObserver(resumeIfSaved).observe(customerStatus, { childList: true, characterData: true, subtree: true, attributes: true });
       }
-      setInterval(resumeAfterAuth, 250);
+      setInterval(() => { goDashboard(); resumeAfterAuth(); }, 250);
       setTimeout(resumeAfterAuth, 0);
     });
   })();
