@@ -1,0 +1,10 @@
+AGENDA YA B5.4 — SOLO ARCHIVOS MODIFICADOS
+
+Base: somos-agenda-Backup-5.0-producci-n (13).zip, integrando archivos B5.3 compatibles.
+
+Cambios incluidos:
+- Perfil cliente: HTML/CSS/JS con consulta de notificaciones generales y renderizado.
+- Perfil negocio: motor de notificaciones actualizado para consumir fuentes de eventos generales cuando exista la RPC.
+- SQL de corrección: usa idempotency_key y la clave única (user_id, idempotency_key); recordatorio de cita dentro de las próximas 24 h; aviso de suscripción solo dentro de 7 días; alertas de pago pendientes solo cuando la suscripción asociada vence dentro de 7 días, sin usar created_at como fecha de vencimiento.
+
+IMPORTANTE: aplicar el SQL de patches manualmente en Supabase. No se ejecuta desde el frontend. Después probar con reserva elegible y confirmar el renderizado real. El ZIP no es APK ni incluye proyecto Android nativo.
