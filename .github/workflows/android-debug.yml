@@ -67,6 +67,54 @@ jobs:
           p.write_text(s)
           PYICON
 
+      - name: Configurar barras del sistema blancas en Android
+        run: |
+          python3 - <<'PYBARS'
+          from pathlib import Path
+          import xml.etree.ElementTree as ET
+
+          res = Path("android/app/src/main/res")
+          candidates = list(res.glob("values*/styles.xml")) + list(res.glob("values*/themes.xml"))
+          if not candidates:
+              raise SystemExit("No se encontraron styles.xml/themes.xml en los recursos Android generados")
+
+          attrs = {
+              "android:statusBarColor": "#FFFFFFFF",
+              "android:navigationBarColor": "#FFFFFFFF",
+              "android:windowLightStatusBar": "true",
+              "android:windowLightNavigationBar": "true",
+              "android:windowDrawsSystemBarBackgrounds": "true",
+              "android:windowActionModeOverlay": "true",
+              "android:windowOptOutEdgeToEdgeEnforcement": "true",
+          }
+          ns = "http://schemas.android.com/apk/res/android"
+          ET.register_namespace("android", ns)
+          changed = 0
+          for file in candidates:
+              try:
+                  tree = ET.parse(file)
+              except ET.ParseError:
+                  continue
+              root = tree.getroot()
+              local_change = False
+              for style in root.findall("style"):
+                  # Aplicar a todos los temas de la aplicación para que persista entre vistas.
+                  for name, value in attrs.items():
+                      key = f"{{{ns}}}{name.split(':', 1)[1]}"
+                      item = next((x for x in style.findall("item") if x.get("name") == name), None)
+                      if item is None:
+                          item = ET.SubElement(style, "item", {"name": name})
+                      if item.text != value:
+                          item.text = value
+                          local_change = True
+              if local_change:
+                  tree.write(file, encoding="utf-8", xml_declaration=True)
+                  changed += 1
+          if changed == 0:
+              raise SystemExit("No se pudo aplicar la configuración de barras a los temas Android")
+          print(f"Barras blancas configuradas en {changed} archivo(s) de temas Android")
+          PYBARS
+
       - name: Sincronizar aplicación web
         run: npx cap sync android
 
