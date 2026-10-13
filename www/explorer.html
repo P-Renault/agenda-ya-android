@@ -17,29 +17,8 @@
     .market-notification b{position:absolute;right:5px;top:5px;width:9px;height:9px;border-radius:50%;background:#e53935}
     @media(max-width:700px){.market-header{height:76px}.market-brand img{width:190px;height:62px;object-fit:contain;background:transparent}.market-header-actions{gap:8px}.market-header-actions .account-button,.market-header-actions .account-button.signed{width:44px;height:44px;min-width:44px}.market-notification{width:42px;height:42px;min-width:42px}.market-notification svg{width:21px;height:21px}}
   </style>
-<style id="ay-android-client-top-spacer-fix">
-#ayAndroidClientTopSpacer{display:none}
-body.ay-android-client-apk #ayAndroidClientTopSpacer{
- display:block!important;position:relative!important;z-index:2147483001!important;
- width:100%!important;height:21px!important;min-height:21px!important;max-height:21px!important;
- margin:0!important;padding:0!important;border:0!important;box-sizing:border-box!important;
- background:#fff!important;flex:0 0 21px!important;visibility:visible!important;
-}
-</style>
 </head>
 <body class="marketplace-page">
-<div id="ayAndroidClientTopSpacer" aria-hidden="true"></div><script id="ayAndroidClientTopSpacerInit">
-(function(){
- try {
-  var c=window.Capacitor;
-  var native=!!(c&&((typeof c.isNativePlatform==='function'&&c.isNativePlatform())||
-    (typeof c.getPlatform==='function'&&/^(android|ios)$/i.test(String(c.getPlatform())))));
-  var local=location.hostname==='localhost'&&/^https?:$/.test(location.protocol);
-  if(native||local)document.body.classList.add('ay-android-client-apk');
- } catch(e) {}
-})();
-</script>
-
 <main class="marketplace-shell">
   <header class="market-header">
     <a class="market-brand" href="explorer.html" aria-label="Agenda Ya"><img src="assets/agenda-ya-logo-header.png" alt="Agenda Ya"></a>

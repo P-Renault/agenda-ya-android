@@ -1,0 +1,52 @@
+/* Agenda YA Android APK — ajuste global para TODAS las vistas móviles. Web pública sin cambios. */
+:root{--ay-android-top-strip:21px;--ay-android-bottom-strip:41px}
+#ayAndroidGlobalTopStrip,#ayAndroidGlobalBottomStrip{display:none}
+body.ay-android-global-mobile #ayAndroidGlobalTopStrip{
+ display:block!important;position:fixed!important;top:0!important;left:0!important;right:0!important;
+ width:100%!important;height:21px!important;min-height:21px!important;max-height:21px!important;
+ margin:0!important;padding:0!important;border:0!important;box-sizing:border-box!important;
+ background:#fff!important;z-index:2147483646!important;pointer-events:none!important
+}
+body.ay-android-global-mobile #ayAndroidGlobalBottomStrip{
+ display:block!important;position:fixed!important;bottom:0!important;left:0!important;right:0!important;
+ width:100%!important;height:41px!important;min-height:41px!important;max-height:41px!important;
+ margin:0!important;padding:0!important;border:0!important;box-sizing:border-box!important;
+ background:#fff!important;z-index:2147483646!important;pointer-events:none!important
+}
+/* Push content away from the strips. */
+body.ay-android-global-mobile{padding-top:21px!important;padding-bottom:41px!important;box-sizing:border-box!important}
+/* Keep fixed mobile navigation above the bottom strip, across customer and business screens. */
+body.ay-android-global-mobile .ay-mobile-rail,
+body.ay-android-global-mobile .mobile-bottom-nav,
+body.ay-android-global-mobile .customer-bottom-nav,
+body.ay-android-global-mobile .bottom-nav,
+body.ay-android-global-mobile .app-bottom-nav,
+body.ay-android-global-mobile .mobile-nav,
+body.ay-android-global-mobile .bottom-navigation,
+body.ay-android-global-mobile [class*="bottom-nav"],
+body.ay-android-global-mobile [class*="bottom-navigation"],
+body.ay-android-global-mobile [class*="mobile-tab-bar"],
+body.ay-android-global-mobile [class*="tabbar"],
+body.ay-android-global-mobile nav[aria-label*="navegación" i],
+body.ay-android-global-mobile nav[aria-label*="navigation" i]{
+ bottom:calc(41px + env(safe-area-inset-bottom,0px))!important
+}
+/* On desktop-sized webviews do not apply mobile strips. */
+@media(min-width:701px){
+ body.ay-android-global-mobile #ayAndroidGlobalTopStrip,
+ body.ay-android-global-mobile #ayAndroidGlobalBottomStrip{display:none!important}
+ body.ay-android-global-mobile{padding-top:0!important;padding-bottom:0!important}
+ body.ay-android-global-mobile .ay-mobile-rail,
+ body.ay-android-global-mobile .mobile-bottom-nav,
+ body.ay-android-global-mobile .customer-bottom-nav,
+ body.ay-android-global-mobile .bottom-nav,
+ body.ay-android-global-mobile .app-bottom-nav,
+ body.ay-android-global-mobile .mobile-nav,
+ body.ay-android-global-mobile .bottom-navigation,
+ body.ay-android-global-mobile [class*="bottom-nav"],
+ body.ay-android-global-mobile [class*="bottom-navigation"],
+ body.ay-android-global-mobile [class*="mobile-tab-bar"],
+ body.ay-android-global-mobile [class*="tabbar"],
+ body.ay-android-global-mobile nav[aria-label*="navegación" i],
+ body.ay-android-global-mobile nav[aria-label*="navigation" i]{bottom:0!important}
+}
