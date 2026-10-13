@@ -40,6 +40,9 @@ jobs:
           test -f www/index.html
           test -f www/login.html
           test -f www/dashboard.html
+          test -f www/public-profile.html
+          test -f www/public-profile.css
+          test -f www/public-profile.js
           test -f www/config.js
           test -f capacitor.config.json
 
