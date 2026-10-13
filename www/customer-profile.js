@@ -40,6 +40,8 @@
     const ctx=await e.refresh(user,profile);
     reservations=ctx.reservations||[];
     renderReservations();
+    const requestedBooking=new URLSearchParams(location.search).get('booking_id');
+    if(requestedBooking){const target=document.querySelector(`[data-booking-id="${CSS.escape(requestedBooking)}"]`);if(target){target.style.transition='box-shadow .2s ease';target.style.boxShadow='0 0 0 3px #1672e8';target.scrollIntoView({behavior:'smooth',block:'center'});setTimeout(()=>{target.style.boxShadow='';},3500);}}
     renderRatings();
     renderReputation(ctx.reputation||{score:null,count:0,received:[]});
     return ctx;
@@ -63,7 +65,7 @@
 
   function reservationCard(row){
     const d=dateLabel(row.booking_date),service=row.services?.name||'Servicio',business=row.businesses?.name||'Negocio',slug=row.businesses?.slug||'',pro=[row.professionals?.first_name,row.professionals?.last_name].filter(Boolean).join(' '),href=slug?`public-profile.html?slug=${encodeURIComponent(slug)}`:'explorer.html';
-    return `<article class="cp-reservation-card"><div class="cp-date-box"><strong>${esc(d.day)}</strong><small>${esc(d.month)}</small></div><div><h3>${esc(service)}</h3><div class="cp-business">${esc(business)}</div><div class="cp-meta"><span>▣ ${esc(d.full)}</span><span>◷ ${esc(timeLabel(row.start_time))}–${esc(timeLabel(row.end_time))}</span>${pro?`<span>♙ ${esc(pro)}</span>`:''}</div><div class="cp-res-actions"><a class="cp-text-link" href="${esc(href)}">Ver negocio →</a></div></div><div class="cp-status-wrap"><span class="cp-status ${statusClass(row.status)}">${esc(statusLabel(row.status))}</span></div></article>`;
+    return `<article class="cp-reservation-card" id="cpReservation-${esc(row.id)}" data-booking-id="${esc(row.id)}"><div class="cp-date-box"><strong>${esc(d.day)}</strong><small>${esc(d.month)}</small></div><div><h3>${esc(service)}</h3><div class="cp-business">${esc(business)}</div><div class="cp-meta"><span>▣ ${esc(d.full)}</span><span>◷ ${esc(timeLabel(row.start_time))}–${esc(timeLabel(row.end_time))}</span>${pro?`<span>♙ ${esc(pro)}</span>`:''}</div><div class="cp-res-actions"><a class="cp-text-link" href="${esc(href)}">Ver negocio →</a></div></div><div class="cp-status-wrap"><span class="cp-status ${statusClass(row.status)}">${esc(statusLabel(row.status))}</span></div></article>`;
   }
 
   function renderReservations(){
@@ -149,21 +151,45 @@
       ['welcome',client.rpc('get_welcome_notifications',{p_limit:50})],
       ['app',client.rpc('get_app_notifications',{p_limit:50})]
     ];
+    const engine=window.AgendaYaCustomerData;
     const results=await Promise.all(sources.map(async([kind,promise])=>({kind,...await promise})));
     const rows=[];
+    if(engine?.fetchNotifications){
+      try{
+        const bookingRows=await engine.fetchNotifications();
+        if(Array.isArray(bookingRows))rows.push(...bookingRows.map(n=>({
+          id:n.id,
+          title:n.title||'Estado de reserva actualizado',
+          message:n.text||'Tu reserva tiene una actualización.',
+          created_at:n.created_at,
+          read_at:n.read_at,
+          source:'booking-status'
+        })));
+      }catch(e){
+        console.warn('Agenda YA customer booking notifications:',e?.message||e);
+      }
+    }
     for(const r of results){
       if(r.error){if(!/does not exist|Could not find the function/i.test(r.error.message||''))console.warn('Agenda YA customer notifications:',r.kind,r.error.message);continue;}
-      if(Array.isArray(r.data))rows.push(...r.data);
+      if(Array.isArray(r.data))rows.push(...r.data.map(n=>({...n,source:r.kind,message:n.message||n.text||'Tienes una actualización en Agenda YA.'})));
     }
     const unique=new Map();
-    rows.forEach(n=>unique.set(String(n.id||`${n.title}:${n.created_at}`),n));
+    rows.forEach(n=>unique.set(String(n.source||'general')+':'+String(n.id||`${n.title}:${n.created_at}`),n));
     const sorted=[...unique.values()].sort((a,b)=>new Date(b.created_at||0)-new Date(a.created_at||0)).slice(0,100);
-    box.innerHTML=sorted.length?sorted.map(n=>`<article class="cp-review-item" style="padding:12px 4px;border-bottom:1px solid #e8edf4"><strong>${esc(n.title||'Agenda Ya')}</strong><p>${esc(n.message||'Tienes una actualización en Agenda Ya.')}</p><small>${esc(n.created_at?new Intl.DateTimeFormat('es-CL',{dateStyle:'full',timeStyle:'short'}).format(new Date(n.created_at)):'')}</small></article>`).join(''):'<div class="cp-empty">No tienes notificaciones nuevas.</div>';
+    box.innerHTML=sorted.length?sorted.map(n=>{const bookingId=n.booking_id||n.metadata?.booking_id||null;const destination=n.destination||n.metadata?.destination||null;const href=bookingId?`customer-profile.html?view=reservations&booking_id=${encodeURIComponent(bookingId)}`:destination&&/^\/(explorer|customer-profile|public-profile)\.html(?:[?#].*)?$/.test(destination)?destination:null;return `<article class="cp-review-item cp-notification-entry" style="padding:12px 4px;border-bottom:1px solid #e8edf4"><strong>${esc(n.title||'Agenda YA')}</strong><p>${esc(n.message||'Tienes una actualización en Agenda YA.')}</p><small>${esc(n.created_at?new Intl.DateTimeFormat('es-CL',{dateStyle:'full',timeStyle:'short'}).format(new Date(n.created_at)):'')}</small>${href?`<p><a class="cp-text-link" href="${esc(href)}">${bookingId?'Ver esta reserva →':'Abrir →'}</a></p>`:''}</article>`;}).join(''):'<div class="cp-empty">No tienes notificaciones nuevas.</div>';
     const badge=$('cpNotificationBadge'),unread=sorted.filter(n=>!n.read_at).length;
     if(badge){badge.textContent=String(unread);badge.hidden=unread===0;}
   }
 
-  async function openNotifications(){closeOverlays();$('cpNotificationPanel').hidden=false;$('cpBackdrop').hidden=false;await loadCustomerNotifications();}
+  async function openNotifications(){
+    closeOverlays();$('cpNotificationPanel').hidden=false;$('cpBackdrop').hidden=false;
+    await loadCustomerNotifications();
+    const engine=window.AgendaYaCustomerData;
+    if(engine?.markNotificationsRead){
+      try{await engine.markNotificationsRead();await loadCustomerNotifications();}
+      catch(e){console.warn('Agenda YA: no se pudieron marcar como leídas las notificaciones de reservas.',e?.message||e);}
+    }
+  }
   async function logout(){const b=$('cpLogout');b.disabled=true;b.textContent='Saliendo…';try{await client.auth.signOut();}catch(_){}location.href='index.html';}
 
   async function init(){

@@ -16,11 +16,7 @@
     .market-notification svg{display:block;width:22px;height:22px}
     .market-notification b{position:absolute;right:5px;top:5px;width:9px;height:9px;border-radius:50%;background:#e53935}
     @media(max-width:700px){.market-header{height:76px}.market-brand img{width:190px;height:62px;object-fit:contain;background:transparent}.market-header-actions{gap:8px}.market-header-actions .account-button,.market-header-actions .account-button.signed{width:44px;height:44px;min-width:44px}.market-notification{width:42px;height:42px;min-width:42px}.market-notification svg{width:21px;height:21px}}
-  .ay-welcome-btn{display:grid;place-items:center;min-width:46px;height:46px;border:1px solid #e7d49a;border-radius:15px;background:#fffdf4;color:#f4b400;box-shadow:0 2px 7px rgba(20,43,76,.06);padding:0}.ay-welcome-btn svg{width:25px;height:25px;display:block;fill:#ffc928;stroke:#d79b00;stroke-width:1.25}.ay-welcome-btn:focus-visible{outline:3px solid #1684e8;outline-offset:2px}
-    @media(max-width:700px){.ay-welcome-btn{min-width:42px;height:42px;border-radius:13px}.ay-welcome-btn svg{width:23px;height:23px}}
   </style>
-<link rel="stylesheet" href="./android-global-mobile-safe-area.css">
-<script defer src="./android-global-mobile-safe-area.js"></script>
 </head>
 <body class="marketplace-page">
 <main class="marketplace-shell">
@@ -42,5 +38,7 @@
   <section id="results" class="market-grid" aria-live="polite"></section>
 </main>
 <script src="config.js"></script><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="explorer.js"></script><script src="customer-welcome-notifications.js"></script>
-
+<script>
+(()=>{const bell='<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M18 9a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></svg>';const fix=()=>{const n=document.querySelector('.market-notification');if(n){const span=n.querySelector('span');if(span)span.outerHTML=bell; n.setAttribute('aria-label','Notificaciones');}};fix();new MutationObserver(fix).observe(document.getElementById('marketAccount')||document.body,{childList:true,subtree:true});})();
+</script>
 </body></html>
