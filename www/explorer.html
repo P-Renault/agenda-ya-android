@@ -17,38 +17,29 @@
     .market-notification b{position:absolute;right:5px;top:5px;width:9px;height:9px;border-radius:50%;background:#e53935}
     @media(max-width:700px){.market-header{height:76px}.market-brand img{width:190px;height:62px;object-fit:contain;background:transparent}.market-header-actions{gap:8px}.market-header-actions .account-button,.market-header-actions .account-button.signed{width:44px;height:44px;min-width:44px}.market-notification{width:42px;height:42px;min-width:42px}.market-notification svg{width:21px;height:21px}}
   </style>
-<style id="ay-android-client-safe-area">
-/* APK Android only: 21px above customer header and 41px below customer navigation. */
-#ayAndroidClientTopSpacer,#ayAndroidClientBottomSpacer{display:none}
+<style id="ay-android-client-top-spacer-fix">
+#ayAndroidClientTopSpacer{display:none}
 body.ay-android-client-apk #ayAndroidClientTopSpacer{
- display:block!important;width:100%!important;height:21px!important;min-height:21px!important;
- flex:0 0 21px!important;background:#fff!important;position:relative!important;z-index:10000!important;
-}
-body.ay-android-client-apk #ayAndroidClientBottomSpacer{
- display:block!important;position:fixed!important;z-index:2147483000!important;
- left:0!important;right:0!important;bottom:0!important;height:41px!important;min-height:41px!important;
- box-sizing:border-box!important;background:#fff!important;pointer-events:none!important;
-}
-body.ay-android-client-apk .mobile-bottom-nav,
-body.ay-android-client-apk .bottom-nav,
-body.ay-android-client-apk .customer-bottom-nav,
-body.ay-android-client-apk nav[aria-label*="navegación" i],
-body.ay-android-client-apk nav[aria-label*="navigation" i]{
- bottom:calc(41px + env(safe-area-inset-bottom,0px))!important
-}
-body.ay-android-client-apk{padding-bottom:calc(41px + env(safe-area-inset-bottom,0px))!important}
-@media(min-width:701px){
- body.ay-android-client-apk #ayAndroidClientBottomSpacer{display:none!important}
- body.ay-android-client-apk .mobile-bottom-nav,
- body.ay-android-client-apk .bottom-nav,
- body.ay-android-client-apk .customer-bottom-nav,
- body.ay-android-client-apk nav[aria-label*="navegación" i],
- body.ay-android-client-apk nav[aria-label*="navigation" i]{bottom:0!important}
- body.ay-android-client-apk{padding-bottom:0!important}
+ display:block!important;position:relative!important;z-index:2147483001!important;
+ width:100%!important;height:21px!important;min-height:21px!important;max-height:21px!important;
+ margin:0!important;padding:0!important;border:0!important;box-sizing:border-box!important;
+ background:#fff!important;flex:0 0 21px!important;visibility:visible!important;
 }
 </style>
 </head>
 <body class="marketplace-page">
+<div id="ayAndroidClientTopSpacer" aria-hidden="true"></div><script id="ayAndroidClientTopSpacerInit">
+(function(){
+ try {
+  var c=window.Capacitor;
+  var native=!!(c&&((typeof c.isNativePlatform==='function'&&c.isNativePlatform())||
+    (typeof c.getPlatform==='function'&&/^(android|ios)$/i.test(String(c.getPlatform())))));
+  var local=location.hostname==='localhost'&&/^https?:$/.test(location.protocol);
+  if(native||local)document.body.classList.add('ay-android-client-apk');
+ } catch(e) {}
+})();
+</script>
+
 <main class="marketplace-shell">
   <header class="market-header">
     <a class="market-brand" href="explorer.html" aria-label="Agenda Ya"><img src="assets/agenda-ya-logo-header.png" alt="Agenda Ya"></a>
@@ -70,17 +61,5 @@ body.ay-android-client-apk{padding-bottom:calc(41px + env(safe-area-inset-bottom
 <script src="config.js"></script><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="explorer.js"></script><script src="customer-welcome-notifications.js"></script>
 <script>
 (()=>{const bell='<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M18 9a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></svg>';const fix=()=>{const n=document.querySelector('.market-notification');if(n){const span=n.querySelector('span');if(span)span.outerHTML=bell; n.setAttribute('aria-label','Notificaciones');}};fix();new MutationObserver(fix).observe(document.getElementById('marketAccount')||document.body,{childList:true,subtree:true});})();
-</script>
-<div id="ayAndroidClientBottomSpacer" aria-hidden="true"></div>
-<script id="ayAndroidClientSafeAreaInit">
-(function(){
- try{
-  var c=window.Capacitor;
-  var native=!!(c&&((typeof c.isNativePlatform==='function'&&c.isNativePlatform())||
-    (typeof c.getPlatform==='function'&&/^(android|ios)$/i.test(String(c.getPlatform())))));
-  var local=location.hostname==='localhost'&&/^https?:$/.test(location.protocol);
-  if(native||local)document.body.classList.add('ay-android-client-apk');
- }catch(e){}
-})();
 </script>
 </body></html>
