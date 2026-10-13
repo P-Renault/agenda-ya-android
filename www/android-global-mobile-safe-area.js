@@ -1,6 +1,9 @@
 /* Detecta solamente Capacitor/localhost: no altera el sitio público en el navegador. */
 (function(){
  try{
+  /* El login conserva su composición original: las franjas se aplican después de autenticar. */
+  var page=(location.pathname||'').split('/').pop().toLowerCase();
+  if(page==='login.html'||page==='login-2.html')return;
   var c=window.Capacitor;
   var native=!!(c&&(
     (typeof c.isNativePlatform==='function'&&c.isNativePlatform())||

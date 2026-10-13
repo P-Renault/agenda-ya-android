@@ -10,7 +10,7 @@
     if($('#ayB13BusinessNotifStyles'))return;
     const s=document.createElement('style');s.id='ayB13BusinessNotifStyles';s.textContent=`
     .ay-notification-trigger{position:relative!important;display:inline-flex!important;align-items:center;justify-content:center}
-    .ay-notification-trigger svg{width:22px;height:22px;display:block}.ay-b13-notif-wrap{position:relative;display:inline-flex}
+    .ay-notification-trigger svg{width:22px;height:22px;display:block;fill:#ffc928;stroke:#d79b00;stroke-width:1.25}.ay-b13-notif-wrap{position:relative;display:inline-flex}
     .ay-b13-notif-badge{position:absolute;top:-2px;right:-2px;min-width:17px;height:17px;padding:0 4px;border-radius:99px;background:#e53935;color:#fff;font:700 10px/17px Arial;text-align:center;box-shadow:0 0 0 2px #fff;z-index:2}
     .ay-b13-notif-panel{position:fixed;z-index:100000;top:78px;right:18px;width:min(390px,calc(100vw - 28px));max-height:min(620px,calc(100vh - 105px));background:#fff;border:1px solid #dfe7f2;border-radius:20px;box-shadow:0 18px 55px #142b4c2e;overflow:hidden;display:flex;flex-direction:column}
     .ay-b13-notif-panel[hidden]{display:none!important}.ay-b13-notif-head{padding:17px 18px 13px;border-bottom:1px solid #e8edf4;display:flex;align-items:center;justify-content:space-between;gap:12px}
@@ -26,7 +26,7 @@
   function getButton(){return $('#ayBusinessNotificationsBtn')||$('.ay-header-actions .ay-icon-btn[title="Notificaciones"]');}
   function mount(){
     ensureStyles();const btn=getButton();if(!btn)return false;
-    btn.id='ayBusinessNotificationsBtn';btn.classList.add('ay-notification-trigger');btn.setAttribute('aria-haspopup','dialog');
+    btn.id='ayBusinessNotificationsBtn';btn.classList.add('ay-notification-trigger');btn.innerHTML='<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M18 9a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4" fill="#ffc928" stroke="#d79b00" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round"/></svg>';btn.setAttribute('aria-label','Notificaciones');btn.setAttribute('title','Notificaciones');btn.setAttribute('aria-haspopup','dialog');
     if(!btn.dataset.b13NotifBound){btn.dataset.b13NotifBound='1';btn.addEventListener('click',e=>{e.preventDefault();e.stopPropagation();toggle();});
       const wrap=document.createElement('span');wrap.className='ay-b13-notif-wrap';btn.parentNode.insertBefore(wrap,btn);wrap.appendChild(btn);
       const badge=document.createElement('span');badge.className='ay-b13-notif-badge';badge.hidden=true;wrap.appendChild(badge);}
