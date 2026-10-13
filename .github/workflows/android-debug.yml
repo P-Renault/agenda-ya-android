@@ -46,6 +46,24 @@ jobs:
       - name: Crear proyecto Android nativo
         run: npx cap add android
 
+      - name: Aplicar iconos oficiales Agenda YA
+        run: |
+          mkdir -p android/app/src/main/res
+          cp -R android-icon-resources/. android/app/src/main/res/
+          python3 - <<'PYICON'
+          from pathlib import Path
+          p=Path("android/app/src/main/AndroidManifest.xml")
+          s=p.read_text()
+          import re
+          if 'android:icon="@mipmap/ic_launcher"' not in s:
+              s=re.sub(r'<application\b', '<application android:icon="@mipmap/ic_launcher"', s, count=1)
+          if re.search(r'android:roundIcon="[^"]*"', s):
+              s=re.sub(r'android:roundIcon="[^"]*"', 'android:roundIcon="@mipmap/ic_launcher_round"', s, count=1)
+          else:
+              s=s.replace('android:icon="@mipmap/ic_launcher"', 'android:icon="@mipmap/ic_launcher" android:roundIcon="@mipmap/ic_launcher_round"', 1)
+          p.write_text(s)
+          PYICON
+
       - name: Sincronizar aplicación web
         run: npx cap sync android
 
