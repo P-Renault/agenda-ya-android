@@ -1,0 +1,62 @@
+name: Agenda YA Android - APK de pruebas
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ main, fix/android-packaging ]
+
+permissions:
+  contents: read
+
+jobs:
+  build-debug-apk:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+
+    steps:
+      - name: Descargar código
+        uses: actions/checkout@v4
+
+      - name: Configurar Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+
+      - name: Configurar Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Configurar Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Instalar dependencias
+        run: npm ci --no-audit --no-fund
+
+      - name: Verificar recursos web antes de compilar
+        run: npm run verify:web
+
+      - name: Instalar plataformas Android
+        run: |
+          yes | "$ANDROID_HOME"/cmdline-tools/latest/bin/sdkmanager --licenses
+          "$ANDROID_HOME"/cmdline-tools/latest/bin/sdkmanager "platform-tools" "platforms;android-35" "build-tools;35.0.0"
+
+      - name: Crear proyecto Android nativo
+        run: npx cap add android --no-interactive
+
+      - name: Sincronizar aplicación web
+        run: npx cap sync android
+
+      - name: Compilar APK de pruebas
+        working-directory: android
+        run: ./gradlew assembleDebug --no-daemon
+
+      - name: Publicar APK como artefacto
+        uses: actions/upload-artifact@v4
+        with:
+          name: AgendaYA-Android-debug-APK
+          path: android/app/build/outputs/apk/debug/app-debug.apk
+          if-no-files-found: error
+          retention-days: 14

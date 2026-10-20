@@ -1,0 +1,166 @@
+=============================================================================
+PARCHE: CORRECCIÓN DE EMPAQUETADO ANDROID AGENDA YA
+=============================================================================
+
+VERSIÓN: 1.0
+FECHA: 2026-10-12
+REPO: P-Renault/agenda-ya-android
+RAMA: fix/android-packaging
+
+=============================================================================
+ARCHIVOS A MODIFICAR
+=============================================================================
+
+1. package.json
+   Ubicación: /package.json (raíz del proyecto)
+   Acción: REEMPLAZAR contenido completo
+   Archivo: PATCH_FILES/package.json.patch
+
+2. scripts/verify-web-assets.js
+   Ubicación: /scripts/verify-web-assets.js (CREAR si no existe)
+   Acción: CREAR archivo nuevo
+   Archivo: PATCH_FILES/verify-web-assets.js
+
+3. .github/workflows/android-debug.yml
+   Ubicación: /.github/workflows/android-debug.yml
+   Acción: REEMPLAZAR contenido completo
+   Archivo: PATCH_FILES/android-debug.yml.patch
+
+=============================================================================
+PASOS PARA APLICAR (OPCIÓN A: MANUAL)
+=============================================================================
+
+1. Clona tu fork o el repositorio
+   $ git clone https://github.com/TU_USUARIO/agenda-ya-android.git
+   $ cd agenda-ya-android
+
+2. Crea una rama de trabajo
+   $ git checkout -b fix/android-packaging
+
+3. Copia el contenido de PATCH_FILES/package.json.patch a /package.json
+   - Abre PATCH_FILES/package.json.patch
+   - Selecciona TODO el contenido
+   - Pega en /package.json
+   - Guarda
+
+4. Crea la carpeta scripts si no existe
+   $ mkdir -p scripts
+
+5. Copia el contenido de PATCH_FILES/verify-web-assets.js a /scripts/verify-web-assets.js
+   - Abre PATCH_FILES/verify-web-assets.js
+   - Selecciona TODO el contenido
+   - Crea archivo /scripts/verify-web-assets.js
+   - Pega el contenido
+   - Guarda
+
+6. Copia el contenido de PATCH_FILES/android-debug.yml.patch a /.github/workflows/android-debug.yml
+   - Abre PATCH_FILES/android-debug.yml.patch
+   - Selecciona TODO el contenido
+   - Pega en /.github/workflows/android-debug.yml
+   - Guarda
+
+7. Verifica los cambios
+   $ git status
+   (Debe mostrar 3 archivos modificados/creados)
+
+8. Haz commit de los cambios
+   $ git add package.json scripts/verify-web-assets.js .github/workflows/android-debug.yml
+   $ git commit -m "fix: Corregir empaquetado Android, agregar verificación de web assets y actualizar workflow"
+
+9. Haz push de la rama
+   $ git push origin fix/android-packaging
+
+10. En GitHub, abre una Pull Request
+    - Ve a https://github.com/P-Renault/agenda-ya-android/pulls
+    - Click en "New pull request"
+    - Base: main
+    - Compare: fix/android-packaging
+    - Crea el PR
+
+=============================================================================
+PASOS PARA EJECUTAR LA COMPILACIÓN
+=============================================================================
+
+1. Ve a GitHub Actions
+   https://github.com/P-Renault/agenda-ya-android/actions
+
+2. Selecciona el workflow
+   "Agenda YA Android - APK de pruebas"
+
+3. Haz click en "Run workflow"
+
+4. Selecciona la rama
+   fix/android-packaging
+
+5. Haz click en "Run workflow"
+
+6. Espera a que se complete (30-40 minutos aproximadamente)
+
+7. Descarga el artefacto
+   - Click en el workflow completado
+   - Baja hasta "Artifacts"
+   - Descarga "AgendaYA-Android-debug-APK"
+   - Descomprime el ZIP
+   - El APK está en: app-debug.apk
+
+=============================================================================
+VERIFICACIÓN LOCAL (OPCIONAL)
+=============================================================================
+
+Antes de ejecutar el workflow, puedes verificar localmente que todo está correcto:
+
+1. Instala Node.js 20
+   https://nodejs.org/ (descarga v20.x)
+
+2. En la raíz del proyecto, ejecuta:
+   $ npm ci
+   $ npm run verify:web
+
+3. Si todo está correcto, verás:
+   ✓ Verificación de web assets OK: login, dashboard, recursos, Supabase y Capacitor configurados correctamente.
+
+4. Si hay errores, verás un mensaje claro del recurso que falta:
+   ERROR: Falta www/login.html
+   ERROR: El appId debe ser "cl.agendaya.app"
+   etc.
+
+=============================================================================
+TROUBLESHOOTING
+=============================================================================
+
+PROBLEMA: El workflow no aparece en el menú
+SOLUCIÓN: Git requiere que hayas hecho push de la rama. Verifica:
+  $ git branch -a | grep fix/android-packaging
+
+PROBLEMA: Error "Falta www/login.html"
+SOLUCIÓN: Los archivos web deben estar en la carpeta www/
+  - Verifica que P-Renault/somos-agenda esté sincronizado
+  - Copia los archivos de www/ si es necesario
+
+PROBLEMA: "El appId debe ser cl.agendaya.app"
+SOLUCIÓN: Revisa que capacitor.config.json tenga:
+  {"appId": "cl.agendaya.app", "appName": "Agenda YA", "webDir": "www"}
+
+PROBLEMA: Build timeout en GitHub Actions
+SOLUCIÓN: El workflow tiene timeout de 45 minutos. Si excede:
+  - Revisa los logs (click en el job fallido)
+  - Puede ser por versión de Gradle o dependencias
+  - Intenta ejecutar localmente primero
+
+PROBLEMA: No puedo hacer push a P-Renault/agenda-ya-android
+SOLUCIÓN: 
+  - Necesitas permisos de escritura en ese repo
+  - Alternativa: Haz fork a tu usuario y aplica los cambios allí
+  - Luego abre PR desde tu fork
+
+=============================================================================
+CONTACTO Y SOPORTE
+=============================================================================
+
+Si tienes dudas o problemas:
+1. Abre un issue en el repositorio
+2. Revisa los logs del workflow en GitHub Actions
+3. Verifica que Node 20 y Java 17 estén instalados localmente
+4. Asegúrate de que los archivos web estén en la carpeta www/
+
+=============================================================================
