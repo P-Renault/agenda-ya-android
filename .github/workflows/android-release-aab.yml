@@ -1,0 +1,224 @@
+
+
+
+
+
+name: Agenda YA Android - AAB firmado para Google Play
+
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - fix/android-packaging
+    paths:
+      - '.github/workflows/android-release-aab.yml'
+permissions:
+  contents: read
+
+jobs:
+  build-release-aab:
+    name: Generar AAB firmado
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+
+    steps:
+      - name: Descargar código
+        uses: actions/checkout@v4
+
+      - name: Verificar secretos de firma
+        env:
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: |
+          test -n "$ANDROID_KEYSTORE_BASE64" || (echo "::error::Falta el secreto ANDROID_KEYSTORE_BASE64" && exit 1)
+          test -n "$ANDROID_KEYSTORE_PASSWORD" || (echo "::error::Falta el secreto ANDROID_KEYSTORE_PASSWORD" && exit 1)
+          test -n "$ANDROID_KEY_ALIAS" || (echo "::error::Falta el secreto ANDROID_KEY_ALIAS" && exit 1)
+          test -n "$ANDROID_KEY_PASSWORD" || (echo "::error::Falta el secreto ANDROID_KEY_PASSWORD" && exit 1)
+          echo "Los cuatro secretos de firma están configurados."
+
+      - name: Configurar Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Configurar Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - name: Regenerar dependencias
+        run: |
+          rm -f package-lock.json
+          npm cache clean --force
+          npm install --no-audit --no-fund --prefer-online
+
+      - name: Verificar archivos web
+        run: |
+          test -f www/index.html
+          test -f www/login.html
+          test -f www/dashboard.html
+          test -f www/public-profile.html
+          test -f www/public-profile.css
+          test -f www/public-profile.js
+          test -f www/config.js
+          test -f capacitor.config.json
+
+      - name: Crear proyecto Android nativo
+        run: npx cap add android
+
+      - name: Aplicar iconos oficiales Agenda YA
+        run: |
+          mkdir -p android/app/src/main/res
+          cp -R android-icon-resources/. android/app/src/main/res/
+          python3 - <<'PYICON'
+          from pathlib import Path
+          import re
+
+          p = Path("android/app/src/main/AndroidManifest.xml")
+          s = p.read_text()
+          if 'android:icon="@mipmap/ic_launcher"' not in s:
+              s = re.sub(r'<application\b', '<application android:icon="@mipmap/ic_launcher"', s, count=1)
+          if re.search(r'android:roundIcon="[^"]*"', s):
+              s = re.sub(r'android:roundIcon="[^"]*"', 'android:roundIcon="@mipmap/ic_launcher_round"', s, count=1)
+          else:
+              s = s.replace(
+                  'android:icon="@mipmap/ic_launcher"',
+                  'android:icon="@mipmap/ic_launcher" android:roundIcon="@mipmap/ic_launcher_round"',
+                  1
+              )
+          p.write_text(s)
+          PYICON
+
+      - name: Configurar barras del sistema blancas en Android
+        run: |
+          python3 - <<'PYBARS'
+          from pathlib import Path
+          import xml.etree.ElementTree as ET
+
+          res = Path("android/app/src/main/res")
+          candidates = list(res.glob("values*/styles.xml")) + list(res.glob("values*/themes.xml"))
+          if not candidates:
+              raise SystemExit("No se encontraron styles.xml/themes.xml en los recursos Android generados")
+
+          attrs = {
+              "android:statusBarColor": "#FFFFFFFF",
+              "android:navigationBarColor": "#FFFFFFFF",
+              "android:windowLightStatusBar": "true",
+              "android:windowLightNavigationBar": "true",
+              "android:windowDrawsSystemBarBackgrounds": "true",
+              "android:windowActionModeOverlay": "true",
+              "android:windowOptOutEdgeToEdgeEnforcement": "true",
+          }
+          ns = "http://schemas.android.com/apk/res/android"
+          ET.register_namespace("android", ns)
+          changed = 0
+
+          for file in candidates:
+              try:
+                  tree = ET.parse(file)
+              except ET.ParseError:
+                  continue
+              root = tree.getroot()
+              local_change = False
+              for style in root.findall("style"):
+                  for name, value in attrs.items():
+                      item = next((x for x in style.findall("item") if x.get("name") == name), None)
+                      if item is None:
+                          item = ET.SubElement(style, "item", {"name": name})
+                      if item.text != value:
+                          item.text = value
+                          local_change = True
+              if local_change:
+                  tree.write(file, encoding="utf-8", xml_declaration=True)
+                  changed += 1
+
+          if changed == 0:
+              raise SystemExit("No se pudo aplicar la configuración de barras a los temas Android")
+          print(f"Barras blancas configuradas en {changed} archivo(s) de temas Android")
+          PYBARS
+
+      - name: Sincronizar aplicación web
+        run: npx cap sync android
+
+      - name: Restaurar almacén de claves desde secreto
+        env:
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+        run: |
+          python3 - <<'PYKEY'
+          import base64
+          import os
+          from pathlib import Path
+
+          encoded = "".join(os.environ["ANDROID_KEYSTORE_BASE64"].split())
+          try:
+              data = base64.b64decode(encoded, validate=True)
+          except Exception as exc:
+              raise SystemExit(f"ANDROID_KEYSTORE_BASE64 no contiene Base64 válido: {exc}")
+
+          if len(data) < 100:
+              raise SystemExit("El almacén de claves decodificado parece demasiado pequeño")
+
+          target = Path("android/app/upload-keystore.jks")
+          target.write_bytes(data)
+          target.chmod(0o600)
+          print("Almacén de claves preparado para la compilación.")
+          PYKEY
+
+      - name: Configurar firma de publicación en Gradle
+        run: |
+          python3 - <<'PYGRADLE'
+          from pathlib import Path
+
+          gradle = Path("android/app/build.gradle")
+          if not gradle.is_file():
+              raise SystemExit(
+                  "No se encontró android/app/build.gradle. "
+                  "Se esperaba el proyecto Android Groovy generado por Capacitor."
+              )
+
+          content = gradle.read_text()
+          marker = "// AGENDA_YA_RELEASE_SIGNING_CONFIG"
+          if marker in content:
+              raise SystemExit("La configuración de firma ya existe; se cancela para evitar duplicarla.")
+
+          signing = r'''
+          // AGENDA_YA_RELEASE_SIGNING_CONFIG
+          android {
+              signingConfigs {
+                  release {
+                      storeFile file("upload-keystore.jks")
+                      storePassword System.getenv("ANDROID_KEYSTORE_PASSWORD")
+                      keyAlias System.getenv("ANDROID_KEY_ALIAS")
+                      keyPassword System.getenv("ANDROID_KEY_PASSWORD")
+                  }
+              }
+              buildTypes {
+                  release {
+                      signingConfig signingConfigs.release
+                  }
+              }
+          }
+          '''
+          gradle.write_text(content.rstrip() + "\n\n" + signing.lstrip())
+          print("Configuración de firma añadida al Gradle generado.")
+          PYGRADLE
+
+      - name: Compilar Android App Bundle firmado
+        working-directory: android
+        env:
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: ./gradlew bundleRelease --no-daemon
+
+      - name: Publicar AAB como artefacto
+        uses: actions/upload-artifact@v4
+        with:
+          name: AgendaYA-Android-AAB-firmado
+          path: android/app/build/outputs/bundle/release/app-release.aab
+          if-no-files-found: error
+          retention-days: 30

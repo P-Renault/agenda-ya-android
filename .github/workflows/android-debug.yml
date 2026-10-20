@@ -3,7 +3,9 @@ name: Agenda YA Android - APK de pruebas
 on:
   workflow_dispatch:
   push:
-    branches: [ main ]
+    branches:
+      - main
+      - fix/android-packaging
 
 permissions:
   contents: read
@@ -11,6 +13,7 @@ permissions:
 jobs:
   build-debug-apk:
     runs-on: ubuntu-latest
+
     steps:
       - name: Descargar código
         uses: actions/checkout@v4
@@ -18,8 +21,7 @@ jobs:
       - name: Configurar Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 22
-        
+          node-version: 20
 
       - name: Configurar Java
         uses: actions/setup-java@v4
@@ -27,11 +29,91 @@ jobs:
           distribution: temurin
           java-version: '21'
 
-      - name: Instalar dependencias
-        run: npm install --no-audit --no-fund
+      - name: Regenerar dependencias
+        run: |
+          rm -f package-lock.json
+          npm cache clean --force
+          npm install --no-audit --no-fund --prefer-online
+
+      - name: Verificar archivos web
+        run: |
+          test -f www/index.html
+          test -f www/login.html
+          test -f www/dashboard.html
+          test -f www/public-profile.html
+          test -f www/public-profile.css
+          test -f www/public-profile.js
+          test -f www/config.js
+          test -f capacitor.config.json
 
       - name: Crear proyecto Android nativo
         run: npx cap add android
+
+      - name: Aplicar iconos oficiales Agenda YA
+        run: |
+          mkdir -p android/app/src/main/res
+          cp -R android-icon-resources/. android/app/src/main/res/
+          python3 - <<'PYICON'
+          from pathlib import Path
+          p=Path("android/app/src/main/AndroidManifest.xml")
+          s=p.read_text()
+          import re
+          if 'android:icon="@mipmap/ic_launcher"' not in s:
+              s=re.sub(r'<application\b', '<application android:icon="@mipmap/ic_launcher"', s, count=1)
+          if re.search(r'android:roundIcon="[^"]*"', s):
+              s=re.sub(r'android:roundIcon="[^"]*"', 'android:roundIcon="@mipmap/ic_launcher_round"', s, count=1)
+          else:
+              s=s.replace('android:icon="@mipmap/ic_launcher"', 'android:icon="@mipmap/ic_launcher" android:roundIcon="@mipmap/ic_launcher_round"', 1)
+          p.write_text(s)
+          PYICON
+
+      - name: Configurar barras del sistema blancas en Android
+        run: |
+          python3 - <<'PYBARS'
+          from pathlib import Path
+          import xml.etree.ElementTree as ET
+
+          res = Path("android/app/src/main/res")
+          candidates = list(res.glob("values*/styles.xml")) + list(res.glob("values*/themes.xml"))
+          if not candidates:
+              raise SystemExit("No se encontraron styles.xml/themes.xml en los recursos Android generados")
+
+          attrs = {
+              "android:statusBarColor": "#FFFFFFFF",
+              "android:navigationBarColor": "#FFFFFFFF",
+              "android:windowLightStatusBar": "true",
+              "android:windowLightNavigationBar": "true",
+              "android:windowDrawsSystemBarBackgrounds": "true",
+              "android:windowActionModeOverlay": "true",
+              "android:windowOptOutEdgeToEdgeEnforcement": "true",
+          }
+          ns = "http://schemas.android.com/apk/res/android"
+          ET.register_namespace("android", ns)
+          changed = 0
+          for file in candidates:
+              try:
+                  tree = ET.parse(file)
+              except ET.ParseError:
+                  continue
+              root = tree.getroot()
+              local_change = False
+              for style in root.findall("style"):
+                  # Aplicar a todos los temas de la aplicación para que persista entre vistas.
+                  for name, value in attrs.items():
+                      key = f"{{{ns}}}{name.split(':', 1)[1]}"
+                      item = next((x for x in style.findall("item") if x.get("name") == name), None)
+                      if item is None:
+                          item = ET.SubElement(style, "item", {"name": name})
+                      if item.text != value:
+                          item.text = value
+                          local_change = True
+              if local_change:
+                  tree.write(file, encoding="utf-8", xml_declaration=True)
+                  changed += 1
+          if changed == 0:
+              raise SystemExit("No se pudo aplicar la configuración de barras a los temas Android")
+          print(f"Barras blancas configuradas en {changed} archivo(s) de temas Android")
+          PYBARS
 
       - name: Sincronizar aplicación web
         run: npx cap sync android
@@ -40,7 +122,7 @@ jobs:
         working-directory: android
         run: ./gradlew assembleDebug --no-daemon
 
-      - name: Publicar APK como artefacto
+      - name: Publicar APK
         uses: actions/upload-artifact@v4
         with:
           name: AgendaYA-Android-debug-APK
