@@ -279,6 +279,20 @@
     const r=await client.rpc('get_public_business_profile',{p_slug:slug});
     if(r.error||!r.data){const msg=r.error?.message||'';if(/NOT_FOUND|not found/i.test(msg))return showError('El negocio no existe o ya no está disponible públicamente.');if(/NOT_PUBLISHED|published/i.test(msg))return showError('Este negocio todavía no está publicado en el marketplace.');return showError('No pudimos cargar el perfil público en este momento.');}
     render(r.data);
+    // Registra la visita al perfil público para que el propietario la reciba en su campana.
+    // La RPC valida publicación, evita auto-visitas y deduplica por visitante/perfil/día.
+    try {
+      const visitBusinessId = r.data?.business?.id;
+      if (visitBusinessId) {
+        const visit = await client.rpc('register_business_profile_view', {
+          p_business_id: visitBusinessId,
+          p_slug: r.data?.business?.slug || slug
+        });
+        if (visit.error) console.warn('Agenda Ya: no se pudo registrar la visita al perfil público:', visit.error.message || visit.error);
+      }
+    } catch (visitError) {
+      console.warn('Agenda Ya: error registrando visita al perfil público:', visitError);
+    }
     const pending=readPendingDraft();
     const currentSlug=r.data?.business?.slug || slug;
     if(pending?.slug === currentSlug){

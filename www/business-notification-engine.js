@@ -20,6 +20,7 @@
     .ay-b13-notif-item.is-unread{background:#f5f9ff;border-color:#dceaff}.ay-b13-notif-item strong{display:block;color:#18345b;font-size:14px;line-height:1.35}
     .ay-b13-notif-item p{margin:5px 0;color:#68778b;font-size:13px;line-height:1.4}.ay-b13-notif-item small{color:#98a3b2;font-size:11px}
     .ay-b13-notif-empty{padding:38px 18px;text-align:center;color:#7c899a;font-size:14px}
+    .ay-notification-event-focus{outline:3px solid #1672e8!important;outline-offset:5px!important;transition:outline-color .2s}
     @media(max-width:700px){.ay-b13-notif-panel{top:74px;right:10px;width:calc(100vw - 20px);max-height:calc(100vh - 92px);border-radius:18px}.ay-notification-trigger{width:40px!important;height:40px!important;min-width:40px!important;flex:0 0 40px}.ay-notification-trigger svg{width:21px;height:21px}}
     `;document.head.appendChild(s);
   }
@@ -33,15 +34,63 @@
     return true;
   }
   function normalize(r,kind){
-    if(kind==='reservation')return {id:'reservation:'+r.id,kind,title:r.service_name||'Reserva actualizada',message:!r.previous_status?`Nueva reserva de ${r.client_name||'cliente'}.`:`Reserva de ${r.client_name||'cliente'}: ${label(r.previous_status)} → ${label(r.new_status)}.`,created_at:r.created_at||r.booking_date,read_at:r.read_at,detail:r.booking_date&&`${r.booking_date}${r.start_time?' · '+String(r.start_time).slice(0,5):''}`};
-    return {id:kind+':'+r.id,kind,title:r.title||'Notificación',message:r.message||'',created_at:r.created_at,read_at:r.read_at,detail:r.payment_status?('Estado: '+label(r.payment_status)):''};
+    if(kind==='reservation')return {id:'reservation:'+r.id,kind,booking_id:r.booking_id||r.id,title:r.service_name||'Reserva actualizada',message:!r.previous_status?`Nueva reserva de ${r.client_name||'cliente'}.`:`Reserva de ${r.client_name||'cliente'}: ${label(r.previous_status)} → ${label(r.new_status)}.`,created_at:r.created_at||r.booking_date,read_at:r.read_at,detail:r.booking_date&&`${r.booking_date}${r.start_time?' · '+String(r.start_time).slice(0,5):''}`};
+    return {id:kind+':'+r.id,kind,booking_id:r.booking_id||r.data?.booking_id||r.metadata?.booking_id||null,payment_id:r.payment_id||r.data?.payment_id||(kind==='payment'?r.id:null),subscription_id:r.subscription_id||r.data?.subscription_id||r.metadata?.subscription_id||null,destination:r.destination||r.data?.destination||r.metadata?.destination||null,target_module:r.target_module||r.data?.target_module||r.metadata?.target_module||null,target_id:r.target_id||r.data?.target_id||r.metadata?.target_id||null,review_id:r.review_id||r.data?.review_id||r.metadata?.review_id||null,target_type:r.target_type||r.data?.target_type||r.metadata?.target_type||null,data:r.data||r.metadata||null,title:r.title||'Notificación',message:r.message||'',created_at:r.created_at,read_at:r.read_at,detail:r.payment_status?('Estado: '+label(r.payment_status)):''};
   }
   function render(){
     let p=$('#ayB13BusinessNotifPanel');if(!p){p=document.createElement('section');p.id='ayB13BusinessNotifPanel';p.className='ay-b13-notif-panel';p.hidden=true;p.setAttribute('role','dialog');p.setAttribute('aria-label','Notificaciones');document.body.appendChild(p);}
-    p.innerHTML=`<div class="ay-b13-notif-head"><div><strong>Notificaciones</strong><small>${state.unread?`${state.unread} sin leer`:'Todo al día'}</small></div><button class="ay-b13-notif-close" type="button" aria-label="Cerrar notificaciones">×</button></div><div class="ay-b13-notif-list">${state.rows.length?state.rows.map(r=>`<article class="ay-b13-notif-item ${r.read_at?'':'is-unread'}"><strong>${esc(r.title)}</strong><p>${esc(r.message)}</p><small>${esc(fmtDate(r.created_at))}${r.detail?' · '+esc(r.detail):''}</small></article>`).join(''):'<div class="ay-b13-notif-empty">No hay notificaciones todavía.</div>'}</div>`;
+    p.innerHTML=`<div class="ay-b13-notif-head"><div><strong>Notificaciones</strong><small>${state.unread?`${state.unread} sin leer`:'Todo al día'}</small></div><button class="ay-b13-notif-close" type="button" aria-label="Cerrar notificaciones">×</button></div><div class="ay-b13-notif-list">${state.rows.length?state.rows.map((r,i)=>`<article data-notification-index="${i}" class="ay-b13-notif-item ${r.read_at?'':'is-unread'}" role="button" tabindex="0" style="cursor:pointer"><strong>${esc(r.title)}</strong><p>${esc(r.message)}</p><small>${esc(fmtDate(r.created_at))}${r.detail?' · '+esc(r.detail):''}</small></article>`).join(''):'<div class="ay-b13-notif-empty">No hay notificaciones todavía.</div>'}</div>`;
     p.hidden=!state.open;$('.ay-b13-notif-close',p)?.addEventListener('click',close);
+    const list=$('.ay-b13-notif-list',p);if(list&&!list.dataset.eventBound){list.dataset.eventBound='1';const activateRow=el=>openBusinessEvent(state.rows[Number(el.dataset.notificationIndex)]);list.addEventListener('click',e=>{const el=e.target.closest('[data-notification-index]');if(el)activateRow(el);});list.addEventListener('keydown',e=>{if((e.key==='Enter'||e.key===' ')&&e.target.matches('[data-notification-index]')){e.preventDefault();activateRow(e.target);}});}
     const badge=$('.ay-b13-notif-badge');if(badge){badge.textContent=state.unread>99?'99+':String(state.unread);badge.hidden=state.unread<1;}
     getButton()?.setAttribute('aria-expanded',state.open?'true':'false');
+  }
+  function navigateToBusinessSection(section, pendingKey, pendingId){
+    if(pendingKey && pendingId) window[pendingKey]=String(pendingId);
+    const targetId=section==='membership'?'ayMembershipView':section==='billing'?'ayBillingView':'aySettingsView';
+    const focusTarget=()=>{
+      const el=document.getElementById(targetId);
+      if(!el)return false;
+      el.scrollIntoView({behavior:'smooth',block:'center'});
+      el.classList.add('ay-notification-event-focus');
+      window.setTimeout(()=>el.classList.remove('ay-notification-event-focus'),2200);
+      return true;
+    };
+    if(window.AgendaYaUI?.activate){
+      window.AgendaYaUI.activate('settings');
+      let attempts=0;
+      const retryFocus=()=>{if(focusTarget()||attempts++>=12)return;window.setTimeout(retryFocus,180);};
+      window.setTimeout(retryFocus,80);
+    }else{
+      const params=new URLSearchParams({view:'settings',focus:section});
+      if(pendingId)params.set(section==='membership'?'subscription_id':'payment_id',String(pendingId));
+      window.location.href='dashboard.html?'+params.toString();
+    }
+  }
+  function openBusinessEvent(r){
+    if(!r)return;
+    close();
+    const type=String(r.kind||r.type||r.notification_type||'').toLowerCase();
+    const text=[type,r.title,r.message,r.target_type,r.data?.target_type].filter(Boolean).join(' ').toLowerCase();
+    const bookingId=r.booking_id||(r.kind==='reservation'?String(r.id||'').replace(/^reservation:/,''):null);
+    if(/review|rating|reputation|valoraci|reseñ|resen|calific/.test(text)){
+      if(bookingId){window.__AgendaYaPendingBookingId=String(bookingId);window.__AgendaYaPendingReviewId=r.review_id||r.data?.review_id||r.metadata?.review_id||null;}
+      if(window.AgendaYaUI?.activate)window.AgendaYaUI.activate('bookings');else window.location.href='dashboard.html?view=bookings'+(bookingId?'&booking_id='+encodeURIComponent(bookingId):'');
+      return;
+    }
+    if(bookingId){window.__AgendaYaPendingBookingId=String(bookingId);if(window.AgendaYaUI?.activate)window.AgendaYaUI.activate('bookings');else window.location.href='dashboard.html?view=bookings&booking_id='+encodeURIComponent(bookingId);return;}
+    if(type==='plan'||type==='plan_changed'||r.subscription_id||r.new_plan_id||r.data?.new_plan_id){
+      const subscriptionId=r.subscription_id||r.data?.subscription_id||null;
+      navigateToBusinessSection('membership','__AgendaYaPendingSubscriptionId',subscriptionId);
+      return;
+    }
+    if(type==='payment'||r.payment_id){
+      const paymentId=r.payment_id||r.data?.payment_id||r.id;
+      navigateToBusinessSection('billing','__AgendaYaPendingPaymentId',paymentId);
+      return;
+    }
+    if(r.destination&&typeof r.destination==='string'&&!/^(javascript:|https?:\/\/)/i.test(r.destination)){location.href=r.destination;return;}
+    if(r.target_module==='payments'||r.target_module==='subscriptions'||/welcome/.test(type)){if(window.AgendaYaUI?.activate)window.AgendaYaUI.activate(/welcome/.test(type)?'dashboard':'settings');else location.href=/welcome/.test(type)?'dashboard.html':'dashboard.html?view=settings';}
   }
   function toggle(){state.open=!state.open;render();if(state.open)markRead();}
   function close(){state.open=false;const p=$('#ayB13BusinessNotifPanel');if(p)p.hidden=true;getButton()?.setAttribute('aria-expanded','false');}
@@ -51,7 +100,9 @@
       ['reservation',state.client.rpc('get_business_notifications',{p_limit:50})],
       ['plan',state.client.rpc('get_business_plan_notifications',{p_limit:50})],
       ['welcome',state.client.rpc('get_welcome_notifications',{p_limit:50})],
-      ['payment',state.client.rpc('get_business_payment_notifications',{p_limit:50})]
+      ['payment',state.client.rpc('get_business_payment_notifications',{p_limit:50})],
+      ['app',state.client.rpc('get_app_notifications',{p_limit:50})],
+      ['agenda',state.client.rpc('get_agenda_notifications',{p_limit:100})]
     ];
     const results=await Promise.all(jobs.map(async([kind,promise])=>({kind,...await promise})));
     const rows=[];for(const x of results){if(x.error){console.warn('Agenda YA notifications source:',x.kind,x.error.message);continue;}if(Array.isArray(x.data))rows.push(...x.data.map(r=>normalize(r,x.kind)));}
@@ -60,9 +111,17 @@
   }
   async function markRead(){
     if(!state.client||state.unread<1)return;
-    const jobs=['mark_business_notifications_read','mark_welcome_notifications_read','mark_business_plan_notifications_read','mark_business_payment_notifications_read'];
-    const results=await Promise.all(jobs.map(name=>state.client.rpc(name)));
-    results.forEach((x,i)=>{if(x.error&&!/does not exist|Could not find the function/i.test(x.error.message||''))console.warn('Agenda YA mark read:',jobs[i],x.error.message);});
+    const jobs=[
+      ['mark_business_notifications_read',undefined],
+      ['mark_welcome_notifications_read',undefined],
+      ['mark_business_plan_notifications_read',undefined],
+      ['mark_business_payment_notifications_read',undefined],
+      ['mark_app_notifications_read',undefined]
+    ];
+    const agendaIds=state.rows.filter(r=>r.kind==='agenda'&&!r.read_at).map(r=>String(r.id||'').replace(/^agenda:/,'' )).filter(id=>/^[0-9a-f]{8}-[0-9a-f-]{27,}$/i.test(id));
+    if(agendaIds.length)jobs.push(['mark_agenda_notifications_read',{p_notification_ids:agendaIds}]);
+    const results=await Promise.all(jobs.map(([name,args])=>args===undefined?state.client.rpc(name):state.client.rpc(name,args)));
+    results.forEach((x,i)=>{if(x.error&&!/does not exist|Could not find the function/i.test(x.error.message||''))console.warn('Agenda YA mark read:',jobs[i][0],x.error.message);});
     state.rows=state.rows.map(r=>({...r,read_at:r.read_at||new Date().toISOString()}));state.unread=0;render();
   }
   function boot(){if(state.booted)return;state.booted=true;const retry=()=>{if(!mount()){state.booted=false;setTimeout(boot,300);return;}const wait=()=>{const c=window.AgendaYaAuth?.getClient?.();if(c){state.client=c;load();state.timer=setInterval(load,30000);}else setTimeout(wait,300);};wait();document.addEventListener('click',e=>{const p=$('#ayB13BusinessNotifPanel'),b=getButton();if(state.open&&p&&!p.contains(e.target)&&!b?.contains(e.target))close();});document.addEventListener('keydown',e=>{if(e.key==='Escape')close();});};retry();}

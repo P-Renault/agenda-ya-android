@@ -1,0 +1,25 @@
+{
+  "name": "agenda-ya-android",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Empaquetado Android de Agenda YA a partir del web de producción",
+  "scripts": {
+    "verify:web": "node scripts/verify-web-assets.js",
+    "android:sync": "npm run verify:web && npx cap sync android",
+    "android:open": "npx cap open android",
+    "android:run": "npx cap run android",
+    "android:build": "npm run verify:web && npx cap sync android && cd android && ./gradlew assembleDebug --no-daemon",
+    "android:doctor": "npx cap doctor"
+  },
+  "engines": {
+    "node": ">=20 <21",
+    "npm": ">=10"
+  },
+  "dependencies": {
+    "@capacitor/android": "^7.4.3",
+    "@capacitor/core": "^7.4.3"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "^7.4.3"
+  }
+}

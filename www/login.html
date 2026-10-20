@@ -228,6 +228,85 @@
 }
 </style>
 
+
+  <style id="ay-login-confirm-password-layout-final">
+    /* Confirmación: misma estructura y alineación que Email y Contraseña. */
+    #ayAuthForm #ayPasswordConfirmWrap[hidden] { display: none !important; }
+    /* El campo conserva la etiqueta superior y el input completo como los campos hermanos. */
+    #ayAuthForm .ay-auth-field.ay-auth-confirm-field {
+      display: block;
+      width: 100%;
+      min-width: 0;
+      margin: 0;
+    }
+    #ayAuthForm .ay-auth-field.ay-auth-confirm-field > .ay-auth-field-copy {
+      display: flex;
+      flex-direction: column;
+      width: 100%;
+      min-width: 0;
+      margin: 0;
+      padding: 0;
+    }
+    #ayAuthForm .ay-auth-field.ay-auth-confirm-field .ay-auth-label {
+      display: block;
+      margin: 0 0 7px;
+    }
+    #ayAuthForm .ay-auth-confirm-control {
+      display: flex;
+      align-items: center;
+      box-sizing: border-box;
+      width: 100%;
+      min-width: 0;
+      min-height: 44px;
+      height: 44px;
+      padding: 0 14px 0 16px;
+      gap: 12px;
+      border: 1px solid #dfe2e7;
+      border-radius: 12px;
+      background: #fff;
+    }
+    #ayAuthForm .ay-auth-confirm-control:focus-within {
+      border-color: #1684e8;
+      box-shadow: 0 0 0 3px rgba(22,132,232,.10);
+    }
+    #ayAuthForm .ay-auth-confirm-control > .ay-auth-field-icon {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      flex: 0 0 22px;
+      width: 22px;
+      height: 22px;
+      margin: 0;
+      padding: 0;
+      color: #7b8490;
+      pointer-events: none;
+    }
+    #ayAuthForm .ay-auth-confirm-control > .ay-auth-field-icon svg {
+      display: block;
+      width: 22px;
+      height: 22px;
+      fill: none;
+      stroke: currentColor;
+      stroke-width: 1.8;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+    #ayAuthForm .ay-auth-confirm-control .ay-auth-input {
+      display: block;
+      flex: 1 1 auto;
+      box-sizing: border-box;
+      width: 100%;
+      min-width: 0;
+      height: 100%;
+      min-height: 0;
+      margin: 0;
+      padding: 0;
+      border: 0 !important;
+      outline: 0;
+      box-shadow: none !important;
+      background: transparent;
+    }
+  </style>
 </head>
 <body>
   <section class="ay-auth" id="ayAuthView" aria-label="Acceso Agenda Ya">
@@ -237,7 +316,7 @@
     <div class="ay-auth-wrap">
       <div class="ay-auth-topbar">
         <button class="ay-auth-back" id="ayAuthBack" type="button" aria-label="Volver a Agenda YA"
-      onclick="if(history.length>1){history.back()}else{location.href='inicio-publico.html'}">
+      onclick="if(history.length>1){history.back()}else{location.href='landing.html'}">
       <svg viewBox="0 0 32 32" aria-hidden="true"><path d="M20.5 6.5 11 16l9.5 9.5M12 16h17"/></svg>
       <span>Volver a Agenda YA</span>
     </button>
@@ -255,7 +334,7 @@
           <form class="ay-auth-form" id="ayAuthForm" novalidate>
             <label class="ay-auth-field"><span class="ay-auth-field-icon" aria-hidden="true"><svg viewBox="0 0 32 32"><rect x="4" y="7" width="24" height="18" rx="3"/><path d="m5 9 11 9L27 9"/></svg></span><span class="ay-auth-field-copy"><span class="ay-auth-label">Email</span><input class="ay-auth-input" id="ayAuthEmail" type="email" autocomplete="email" placeholder="tu@email.com" required></span></label>
             <label class="ay-auth-field"><span class="ay-auth-field-icon" aria-hidden="true"><svg viewBox="0 0 32 32"><rect x="6" y="14" width="20" height="14" rx="3"/><path d="M10 14V10a6 6 0 0 1 12 0v4"/></svg></span><span class="ay-auth-field-copy ay-auth-password-copy"><span class="ay-auth-label">Contraseña</span><input class="ay-auth-input" id="ayAuthPassword" type="password" autocomplete="current-password" minlength="6" placeholder="Ingresa tu contraseña" required><button class="ay-auth-eye" id="ayAuthPasswordToggle" type="button" aria-label="Mostrar contraseña"><svg class="ay-eye-open" viewBox="0 0 32 32"><path d="M3 16s4.8-7 13-7 13 7 13 7-4.8 7-13 7S3 16 3 16Z"/><circle cx="16" cy="16" r="3.5"/></svg><svg class="ay-eye-closed" viewBox="0 0 32 32"><path d="m5 5 22 22M12.5 12.5a5 5 0 0 0 7 7M8 8.8C4.9 11 3 14 3 16c0 0 4.8 7 13 7 2.2 0 4.2-.5 5.9-1.3M24 20.5C27 18.4 29 16 29 16s-4.8-7-13-7c-1.5 0-2.9.2-4.2.6"/></svg></button></span></label>
-            <label class="ay-auth-label ay-auth-confirm-field" id="ayPasswordConfirmWrap" hidden><span>Confirmar contraseña</span><input class="ay-auth-input" id="ayAuthPasswordConfirm" type="password" autocomplete="new-password" minlength="6"></label>
+            <label class="ay-auth-field ay-auth-confirm-field" id="ayPasswordConfirmWrap" hidden><span class="ay-auth-field-copy"><span class="ay-auth-label">Confirmar contraseña</span><span class="ay-auth-confirm-control"><span class="ay-auth-field-icon" aria-hidden="true"><svg viewBox="0 0 32 32"><rect x="6" y="14" width="20" height="14" rx="3"/><path d="M10 14V10a6 6 0 0 1 12 0v4"/></svg></span><input class="ay-auth-input" id="ayAuthPasswordConfirm" type="password" autocomplete="new-password" minlength="6" placeholder="Confirma tu contraseña"></span></span></label>
             <button class="ay-auth-primary" id="ayAuthSubmit" type="submit"><span>Iniciar sesión</span><b>→</b></button>
           </form>
           <p class="ay-auth-status" id="ayAuthStatus" aria-live="polite"></p>
@@ -410,6 +489,90 @@
       setInterval(() => { goDashboard(); resumeAfterAuth(); }, 250);
       setTimeout(resumeAfterAuth, 0);
     });
+  })();
+  </script>
+  <script id="ay-login-password-visibility-fix">
+  (() => {
+    const bindPasswordToggle = () => {
+      const password = document.getElementById("ayAuthPassword");
+      const toggle = document.getElementById("ayAuthPasswordToggle");
+      if (!password || !toggle || toggle.dataset.ayBound === "1") return;
+      toggle.dataset.ayBound = "1";
+      toggle.addEventListener("click", (event) => {
+        event.preventDefault();
+        const show = password.type === "password";
+        password.type = show ? "text" : "password";
+        toggle.setAttribute("aria-label", show ? "Ocultar contraseña" : "Mostrar contraseña");
+        toggle.setAttribute("aria-pressed", show ? "true" : "false");
+        const openEye = toggle.querySelector(".ay-eye-open");
+        const closedEye = toggle.querySelector(".ay-eye-closed");
+        if (openEye) openEye.style.display = show ? "none" : "";
+        if (closedEye) closedEye.style.display = show ? "" : "none";
+      });
+    };
+    if (document.readyState === "loading") {
+      document.addEventListener("DOMContentLoaded", bindPasswordToggle, { once: true });
+    } else {
+      bindPasswordToggle();
+    }
+  })();
+  </script>
+  <script id="ay-login-confirm-password-mode-fix">
+  (() => {
+    const init = () => {
+      const form = document.getElementById("ayAuthForm");
+      const wrap = document.getElementById("ayPasswordConfirmWrap");
+      const confirm = document.getElementById("ayAuthPasswordConfirm");
+      const switchButton = document.getElementById("ayAuthSwitch");
+      const switchText = document.getElementById("ayAuthSwitchText");
+      const submit = document.getElementById("ayAuthSubmit");
+      const password = document.getElementById("ayAuthPassword");
+      if (!form || !wrap || !confirm || !switchButton || !submit) return;
+
+      const isCreateMode = () => {
+        const label = (submit.textContent || "").toLocaleLowerCase("es");
+        const switchLabel = (switchButton.textContent || "").toLocaleLowerCase("es");
+        return label.includes("crear cuenta") || switchLabel.includes("iniciar sesión") || switchLabel.includes("iniciar sesion");
+      };
+      const syncMode = (createMode) => {
+        wrap.hidden = !createMode;
+        confirm.required = createMode;
+        confirm.disabled = !createMode;
+        if (!createMode) {
+          confirm.value = "";
+          confirm.setCustomValidity("");
+          if (password) password.autocomplete = "current-password";
+        } else if (password) {
+          password.autocomplete = "new-password";
+        }
+        if (switchText) switchText.textContent = createMode ? "¿Ya tienes una cuenta?" : "¿No tienes una cuenta?";
+        submit.querySelector("span")?.replaceChildren(document.createTextNode(createMode ? "Crear cuenta" : "Iniciar sesión"));
+        const arrow = submit.querySelector("b");
+        if (arrow) arrow.textContent = createMode ? "" : "→";
+      };
+
+      // Estado inicial seguro: login con solo email y contraseña.
+      syncMode(false);
+      switchButton.addEventListener("click", () => {
+        // auth.js actualiza primero las etiquetas; leer el estado después de ese cambio.
+        window.setTimeout(() => syncMode(isCreateMode()), 0);
+      });
+
+      form.addEventListener("submit", (event) => {
+        if (wrap.hidden) return;
+        if (password && confirm.value !== password.value) {
+          event.preventDefault();
+          confirm.setCustomValidity("Las contraseñas no coinciden.");
+          confirm.reportValidity();
+          confirm.addEventListener("input", () => confirm.setCustomValidity(""), { once: true });
+        }
+      }, true);
+    };
+    if (document.readyState === "loading") {
+      document.addEventListener("DOMContentLoaded", init, { once: true });
+    } else {
+      init();
+    }
   })();
   </script>
 </body>
