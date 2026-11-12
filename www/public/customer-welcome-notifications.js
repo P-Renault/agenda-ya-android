@@ -1,15 +1,43 @@
-/* Agenda Ya - campana de bienvenida para clientes autenticados en explorer.html */
+/* Agenda YA 5.0 · Indicador único de notificaciones del explorador cliente.
+   Reutiliza #marketNotification creado por explorer.js; no inserta botones adicionales.
+   Al pulsarlo, explorer.js abre el centro completo del perfil cliente. */
 (()=>{'use strict';
- const cfg=window.SOMOS_CONFIG||{};if(!window.supabase?.createClient||!cfg.SUPABASE_URL||!cfg.SUPABASE_ANON_KEY)return;
+ const cfg=window.SOMOS_CONFIG||{};
+ if(!window.supabase?.createClient||!cfg.SUPABASE_URL||!cfg.SUPABASE_ANON_KEY)return;
  const db=window.supabase.createClient(cfg.SUPABASE_URL,cfg.SUPABASE_ANON_KEY,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});
- const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
- let rows=[];let open=false;let button,panel;
- function paint(){if(!button)return;const unread=rows.filter(r=>!r.read_at).length;button.innerHTML=`<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 9a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4" fill="#ffc928" stroke="#d79b00" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>${unread?`<span class="ay-welcome-count">${unread>99?'99+':unread}</span>`:''}`;button.setAttribute('aria-expanded',String(open));panel.hidden=!open;panel.innerHTML=`<header><strong>Notificaciones</strong><button type="button" id="ayWelcomeClose" aria-label="Cerrar">×</button></header>${rows.length?rows.map(r=>`<article class="${r.read_at?'':'unread'}"><b>${esc(r.title)}</b><p>${esc(r.message)}</p></article>`).join(''):'<p>No hay notificaciones.</p>'}`;panel.querySelector('#ayWelcomeClose').onclick=()=>{open=false;paint()};}
- async function load(){const {data,error}=await db.rpc('get_welcome_notifications',{p_limit:50});if(!error){rows=Array.isArray(data)?data:[];paint();}else console.error('Agenda Ya welcome notifications',error.message)}
- async function toggle(){open=!open;paint();if(open&&rows.some(r=>!r.read_at)){const {error}=await db.rpc('mark_welcome_notifications_read');if(!error)await load();}}
- async function init(){const {data}=await db.auth.getUser();if(!data?.user)return;const host=document.querySelector('#marketAccount');if(!host)return;
- const style=document.createElement('style');style.textContent=`.ay-welcome-btn{position:relative;display:grid;place-items:center;min-width:46px;height:46px;border:1px solid #e7d49a;border-radius:15px;background:#fffdf4;color:#f4b400;cursor:pointer;padding:0;box-shadow:0 2px 7px rgba(20,43,76,.06)}.ay-welcome-btn svg{width:25px;height:25px;display:block}.ay-welcome-count{position:absolute;top:-6px;right:-5px;border-radius:15px;background:#e63843;color:white;padding:1px 5px;font-size:10px}.ay-welcome-panel{position:fixed;right:12px;top:70px;width:min(360px,calc(100vw - 24px));max-height:70vh;overflow:auto;background:white;border:1px solid #d9e5f6;border-radius:16px;box-shadow:0 12px 40px #19314a33;z-index:100000;padding:12px;color:#18345b}.ay-welcome-panel[hidden]{display:none}.ay-welcome-panel header{display:flex;justify-content:space-between;align-items:center}.ay-welcome-panel header button{border:0;background:transparent;font-size:24px;cursor:pointer}.ay-welcome-panel article{padding:12px 6px;border-bottom:1px solid #e6edf5}.ay-welcome-panel article.unread{background:#f3f8ff}.ay-welcome-panel p{font-size:13px;line-height:1.5}`;document.head.appendChild(style);
- button=document.createElement('button');button.className='ay-welcome-btn';button.type='button';button.setAttribute('aria-label','Notificaciones');button.onclick=toggle;host.prepend(button);
- panel=document.createElement('section');panel.className='ay-welcome-panel';panel.hidden=true;document.body.appendChild(panel);document.addEventListener('keydown',e=>{if(e.key==='Escape'){open=false;paint()}});await load();setInterval(load,30000);}
+ let button=null,indicator=null,timer=null;
+ const style=document.createElement('style');
+ style.textContent=`.market-notification{position:relative}.market-notification .market-bell-emoji{display:block;font-size:23px;line-height:1;color:#f3b900}.market-notification b{position:absolute;right:4px;top:4px;width:9px;height:9px;border-radius:50%;background:#e53935;border:1px solid #fff}.market-notification b[hidden]{display:none!important}@media(max-width:700px){.market-notification .market-bell-emoji{font-size:22px}}`;
+ document.head.appendChild(style);
+ async function hasUnread(){
+   const {data:userData}=await db.auth.getUser();
+   if(!userData?.user)return false;
+   const calls=await Promise.allSettled([
+     db.rpc('get_welcome_notifications',{p_limit:50}),
+     db.rpc('get_customer_notifications',{p_limit:100}),
+     db.rpc('get_app_notifications',{p_limit:50})
+   ]);
+   return calls.some(result=>{
+     if(result.status!=='fulfilled'||result.value?.error)return false;
+     const rows=Array.isArray(result.value?.data)?result.value.data:[];
+     return rows.some(row=>!row.read_at && !row.is_read);
+   });
+ }
+ async function refresh(){
+   button=document.querySelector('#marketNotification');
+   if(!button)return;
+   indicator=button.querySelector('#marketNotificationIndicator')||button.querySelector('b');
+   if(!indicator)return;
+   try{const unread=await hasUnread();indicator.hidden=!unread;button.setAttribute('aria-label',unread?'Tienes notificaciones nuevas':'Abrir notificaciones');}
+   catch(error){console.warn('Agenda YA: no se pudo actualizar el indicador de notificaciones',error?.message||error);}
+ }
+ function init(){
+   // explorer.js puede renderizar el encabezado después de DOMContentLoaded.
+   refresh();
+   const host=document.querySelector('#marketAccount');
+   if(host){new MutationObserver(()=>refresh()).observe(host,{childList:true,subtree:true});}
+   timer=setInterval(refresh,30000);
+   document.addEventListener('visibilitychange',()=>{if(!document.hidden)refresh();});
+ }
  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});else init();
 })();
