@@ -52,27 +52,40 @@
     currentView = target;
     const meta = labels[target];
     const isDash = target === "dashboard";
+    const publicProfile = target === "public-profile";
+    const publicProfileView = document.getElementById("view-public-profile");
 
-    dashboard.hidden = !isDash;
-    generic.hidden = isDash;
+    // Each page has its own container. The public profile is a dedicated view,
+    // while the remaining operational modules use the generic workspace.
+    if (dashboard) dashboard.hidden = !isDash;
+    if (generic) generic.hidden = isDash || publicProfile;
+    if (publicProfileView) publicProfileView.hidden = !publicProfile;
 
-    if (!isDash) {
-      document.getElementById("ayViewEyebrow").textContent = meta[0];
-      document.getElementById("ayViewTitle").textContent = meta[1];
-      document.getElementById("ayViewDescription").textContent = meta[2];
-      document.getElementById("ayPlaceholderTitle").textContent =
-        `Cargando ${meta[1].toLowerCase()}…`;
+    if (!isDash && !publicProfile) {
+      const eyebrow = document.getElementById("ayViewEyebrow");
+      const title = document.getElementById("ayViewTitle");
+      const description = document.getElementById("ayViewDescription");
+      const placeholder = document.getElementById("ayPlaceholderTitle");
+      if (eyebrow) eyebrow.textContent = meta[0];
+      if (title) title.textContent = meta[1];
+      if (description) description.textContent = meta[2];
+      if (placeholder) placeholder.textContent = `Cargando ${meta[1].toLowerCase()}…`;
     }
 
-    all("[data-view]").forEach(el => el.classList.toggle("is-active", el.dataset.view === target));
-    sidebar.classList.remove("is-open");
+    all(".ay-page").forEach(page => {
+      const pageId = page.id;
+      if (pageId === "view-dashboard") page.hidden = !isDash;
+      else if (pageId === "view-public-profile") page.hidden = !publicProfile;
+      else if (pageId === "view-generic") page.hidden = isDash || publicProfile;
+    });
 
-    // The shell is the single navigation authority. If the operational layer
-    // is already loaded, call it directly; otherwise remember the requested
-    // view and replay it as soon as the module script finishes loading.
-    if (target !== "dashboard" && window.AgendaYaModules?.activate) {
+    all("[data-view]").forEach(el => el.classList.toggle("is-active", el.dataset.view === target));
+    sidebar?.classList.remove("is-open");
+    document.body.classList.remove("ay-menu-open");
+
+    if (target !== "dashboard" && target !== "public-profile" && window.AgendaYaModules?.activate) {
       void window.AgendaYaModules.activate(target);
-    } else if (target !== "dashboard") {
+    } else if (target !== "dashboard" && target !== "public-profile") {
       pendingView = target;
     }
 
@@ -87,7 +100,7 @@
   });
 
   document.getElementById("ayMenuBtn")?.addEventListener("click", () => {
-    sidebar.classList.toggle("is-open");
+    sidebar?.classList.toggle("is-open");
   });
 
   document.getElementById("ayAccountBtn")?.addEventListener("click", () => {
@@ -103,8 +116,8 @@
   };
 
   // The shell remains independent. Operational modules are loaded as a cumulative layer.
-  void loadAsset("css", "agenda-ya-modules.css?v=1.3.1")
-    .then(() => loadAsset("js", "agenda-ya-modules.js?v=1.3.1"))
+  void loadAsset("css", "agenda-ya-modules.css?v=1.3.2")
+    .then(() => loadAsset("js", "agenda-ya-modules.js?v=1.3.2"))
     .then(() => {
       if (pendingView && window.AgendaYaModules?.activate) {
         const target = pendingView;

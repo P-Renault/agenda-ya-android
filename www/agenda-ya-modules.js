@@ -4,7 +4,7 @@
    Does not own authentication or the shell. It reads the authenticated business session from Supabase.
 */
 (() => {
-  if (window.AgendaYaModules?.version === "1.3.1") return;
+  if (window.AgendaYaModules?.version === "1.3.2") return;
 
   const cfg = window.SOMOS_CONFIG || {};
   let client = null;
@@ -58,8 +58,8 @@
 
   async function context(force=false){
     if(!client){
-      if(validConfig() && window.supabase) client=window.supabase.createClient(cfg.SUPABASE_URL,cfg.SUPABASE_ANON_KEY);
-      else { status("Configuración de Supabase no disponible.","error"); return false; }
+      if(validConfig() && window.AgendaYaSupabase?.getClient) client=window.AgendaYaSupabase.getClient();
+      else { status("Configuración o cliente central de Supabase no disponible.","error"); return false; }
     }
     if(!force && user?.id && contextState.businessId && business?.id) return true;
 
@@ -521,7 +521,7 @@
       if (currentView !== view) void activate(view);
     }, 0);
   }, true);
-  window.AgendaYaModules={version:"1.3.1",activate,refresh:()=>activate(currentView),getContext:()=>({user,business,role,businessId:businessId(),contextLoadedAt:contextState.loadedAt})};
+  window.AgendaYaModules={version:"1.3.2",activate,refresh:()=>activate(currentView),getContext:()=>({user,business,role,businessId:businessId(),contextLoadedAt:contextState.loadedAt})};
   const initialView = window.AgendaYaUI?.getPendingView?.() || window.AgendaYaUI?.getCurrentView?.() || "dashboard";
   void activate(initialView);
 

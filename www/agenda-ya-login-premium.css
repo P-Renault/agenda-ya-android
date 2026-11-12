@@ -1,0 +1,133 @@
+/* Agenda YA · Capa visual premium inspirada en el concepto aprobado.
+   No modifica los controladores ni los identificadores consumidos por auth.js. */
+:root {
+  --ay-premium-navy: #061b38;
+  --ay-premium-blue: #087cf0;
+  --ay-premium-cyan: #18bce9;
+  --ay-premium-ink: #0b2548;
+}
+#ayAuthView .ay-login-marketing {
+  width: 56.8% !important;
+  background:
+    radial-gradient(circle at 79% 7%, rgba(10,119,255,.55) 0 13%, transparent 13.5%),
+    radial-gradient(circle at 64% 57%, rgba(20,179,240,.22) 0 19%, transparent 19.5%),
+    radial-gradient(circle at 0% 67%, rgba(0,111,235,.36) 0 12%, transparent 12.5%),
+    linear-gradient(145deg,#03152f 0%,#062b56 57%,#064a7e 100%) !important;
+}
+#ayAuthView .ay-login-marketing-inner {
+  width: min(100% - 108px, 760px) !important;
+}
+#ayAuthView .ay-login-kicker {
+  margin-top: clamp(112px, 17vh, 158px) !important;
+  font-size: clamp(10px,.9vw,13px) !important;
+}
+#ayAuthView .ay-login-marketing h2 {
+  max-width: 690px !important;
+  font-size: clamp(37px,4.45vw,66px) !important;
+  line-height: .98 !important;
+}
+#ayAuthView .ay-login-description {
+  max-width: 570px !important;
+  margin: 17px 0 27px !important;
+  font-size: clamp(13px,1.18vw,17px) !important;
+}
+#ayAuthView .ay-login-benefits article {
+  padding: 12px 11px !important;
+  border-radius: 15px !important;
+  background: rgba(255,255,255,.09) !important;
+}
+#ayAuthView .ay-login-benefit-icon {
+  width: 30px !important;height: 30px !important;flex-basis: 30px !important;
+  border-radius: 9px !important;background: rgba(18,190,235,.2) !important;
+}
+#ayAuthView .ay-login-benefits strong {font-size:clamp(10px,.82vw,12px) !important}
+#ayAuthView .ay-login-benefits small {font-size:clamp(8px,.68vw,10px) !important}
+#ayAuthView .ay-login-device {
+  left: 65% !important;
+  bottom: 7% !important;
+  width: clamp(178px,19vw,250px) !important;
+  height: clamp(235px,39vh,340px) !important;
+  transform: translateX(-50%) rotate(6deg) !important;
+  border-radius: 34px !important;
+  box-shadow: 0 28px 65px rgba(0,0,0,.42), inset 0 0 0 1px #b6c9e1 !important;
+}
+#ayAuthView .ay-login-floating-note {right:5% !important;bottom:48% !important;padding:12px 14px !important}
+#ayAuthView .ay-login-count {left:3% !important;bottom:17% !important;padding:11px 15px !important}
+#ayAuthView .ay-auth-topbar {width:56.8% !important}
+#ayAuthView .ay-auth-back {left:clamp(28px,4.6vw,72px) !important}
+#ayAuthView .ay-auth-brand {
+  left:clamp(28px,4.6vw,72px) !important;top:52px !important;
+  width:clamp(150px,17vw,220px) !important;height:58px !important;
+}
+#ayAuthView .ay-auth-intro {
+  left:56.8% !important;
+  top:clamp(82px,14vh,128px) !important;
+  padding:0 clamp(34px,5.2vw,82px) !important;
+}
+#ayAuthView .ay-auth-intro:before {
+  content:"";
+  display:block;
+  width:clamp(150px,17vw,220px);
+  height:58px;
+  margin:0 auto clamp(20px,3.6vh,34px);
+  background:url("assets/agenda-ya-logo-transparent.png") center/contain no-repeat;
+}
+#ayAuthView .ay-auth-intro .ay-auth-eyebrow {margin-bottom:10px !important}
+#ayAuthView .ay-auth-title {font-size:clamp(27px,2.8vw,39px) !important}
+#ayAuthView .ay-auth-subtitle {font-size:clamp(12px,1.05vw,15px) !important}
+#ayAuthView .ay-auth-card {
+  left:56.8% !important;
+  top:clamp(290px,39vh,365px) !important;
+  padding:0 clamp(34px,5.2vw,82px) 10px !important;
+}
+#ayAuthView .ay-auth-form {gap:12px !important}
+#ayAuthView .ay-auth-field {min-height:58px !important;padding:8px 14px !important;border-radius:13px !important}
+#ayAuthView .ay-auth-field-icon {width:20px !important;flex-basis:20px !important}
+#ayAuthView .ay-auth-field-icon svg {width:18px !important;height:18px !important}
+#ayAuthView .ay-auth-label {font-size:10px !important}
+#ayAuthView .ay-auth-input {height:25px !important;font-size:14px !important}
+#ayAuthView .ay-auth-primary {height:56px !important;min-height:56px !important;border-radius:13px !important;font-size:14px !important}
+#ayAuthView .ay-auth-link {font-size:12px !important;margin-top:7px !important}
+#ayAuthView .ay-auth-divider {margin:17px 0 10px !important;font-size:11px !important}
+#ayAuthView .ay-auth-socials {gap:12px !important}
+#ayAuthView .ay-auth-secondary {height:48px !important;min-height:48px !important;border-radius:12px !important;font-size:11px !important}
+#ayAuthView .ay-social-icon,#ayAuthView .ay-social-icon svg {width:19px !important;height:19px !important;flex-basis:19px !important}
+#ayAuthView .ay-auth-switch {margin-top:17px !important;font-size:12px !important}
+#ayAuthView .ay-auth-foot {margin-top:9px !important;font-size:10px !important}
+@media (max-height:800px) and (min-width:761px) {
+  #ayAuthView .ay-login-kicker {margin-top:105px !important}
+  #ayAuthView .ay-auth-intro {top:42px !important}
+  #ayAuthView .ay-auth-intro:before {height:44px;margin-bottom:12px}
+  #ayAuthView .ay-auth-card {top:238px !important}
+  #ayAuthView .ay-auth-field {min-height:48px !important}
+  #ayAuthView .ay-auth-primary {height:48px !important;min-height:48px !important}
+  #ayAuthView .ay-login-device {height:235px !important;width:174px !important}
+}
+@media (max-width:760px) {
+  #ayAuthView .ay-login-marketing {width:100% !important}
+  #ayAuthView .ay-login-marketing-inner {width:calc(100% - 36px) !important}
+  #ayAuthView .ay-login-kicker {margin-top:61px !important}
+  #ayAuthView .ay-login-marketing h2 {font-size:clamp(21px,5.4vw,29px) !important}
+  #ayAuthView .ay-auth-topbar {width:100% !important}
+  #ayAuthView .ay-auth-brand {display:none !important}
+  #ayAuthView .ay-auth-intro {
+    left:0 !important;top:calc(25svh + 14px) !important;
+    padding:0 22px !important;text-align:center !important;
+  }
+  #ayAuthView .ay-auth-intro:before {display:none}
+  #ayAuthView .ay-auth-title {font-size:clamp(23px,6vw,30px) !important}
+  #ayAuthView .ay-auth-subtitle {text-align:center !important}
+  #ayAuthView .ay-auth-card {
+    left:0 !important;top:calc(25svh + 112px) !important;
+    padding:0 22px 12px !important;
+  }
+  #ayAuthView .ay-auth-field {min-height:49px !important}
+  #ayAuthView .ay-auth-primary {height:48px !important;min-height:48px !important}
+  #ayAuthView .ay-auth-divider {margin:10px 0 7px !important}
+  #ayAuthView .ay-auth-secondary {height:40px !important;min-height:40px !important;font-size:9px !important}
+  #ayAuthView .ay-auth-switch {margin-top:10px !important}
+}
+@media (max-width:380px) {
+  #ayAuthView .ay-auth-intro {top:calc(25svh + 8px) !important}
+  #ayAuthView .ay-auth-card {top:calc(25svh + 98px) !important;padding-left:16px !important;padding-right:16px !important}
+}
