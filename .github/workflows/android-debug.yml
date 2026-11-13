@@ -49,32 +49,50 @@ jobs:
       - name: Crear proyecto Android nativo
         run: npx cap add android
 
-      - name: Configurar minSdkVersion 24 para Google Play
+      - name: Configurar SDK Android 36 e versionCode 2
         run: |
           python3 - <<'PYSDK'
           from pathlib import Path
           import re
 
-          candidates = [Path("android/variables.gradle"), Path("android/app/build.gradle")]
-          changed = []
-          for path in candidates:
-              if not path.is_file():
-                  continue
-              content = path.read_text()
-              if path.name == "variables.gradle":
-                  updated, count = re.subn(r"(minSdkVersion\s*=\s*)23\b", r"\g<1>24", content)
-              else:
-                  updated, count = re.subn(r"(minSdkVersion\s+)23\b", r"\g<1>24", content)
-                  if count == 0:
-                      updated, count = re.subn(r"(minSdk\s*=\s*)23\b", r"\g<1>24", content)
-              if count:
-                  path.write_text(updated)
-                  changed.append(str(path))
+          variables = Path("android/variables.gradle")
+          app_gradle = Path("android/app/build.gradle")
 
-          if not changed:
-              raise SystemExit("No se encontró minSdkVersion 23 en variables.gradle ni app/build.gradle; revisar plantilla Capacitor")
-          print("minSdkVersion actualizado a 24 en: " + ", ".join(changed))
+          if not variables.is_file() or not app_gradle.is_file():
+              raise SystemExit("No se encontraron los archivos Gradle esperados del proyecto Android generado.")
+
+          text = variables.read_text()
+          settings = {
+              "minSdkVersion": 24,
+              "compileSdkVersion": 36,
+              "targetSdkVersion": 36,
+          }
+          for key, value in settings.items():
+              pattern = rf"({key}\s*=\s*)\d+"
+              updated, count = re.subn(pattern, rf"\g<1>{value}", text, count=1)
+              if count != 1:
+                  raise SystemExit(f"No se pudo localizar {key} en android/variables.gradle")
+              text = updated
+          variables.write_text(text)
+
+          app = app_gradle.read_text()
+          version_pattern = r"(versionCode\s+)\d+"
+          app, count = re.subn(version_pattern, r"\g<1>2", app, count=1)
+          if count != 1:
+              raise SystemExit("No se pudo localizar versionCode en android/app/build.gradle")
+          app, name_count = re.subn(r'(versionName\s+")[^"]+(")', r"\g<1>1.0.1\g<2>", app, count=1)
+          if name_count == 0:
+              print("Aviso: versionName no se modificó; versionCode sí quedó en 2.")
+          app_gradle.write_text(app)
+
+          print("Configuración aplicada:")
+          print("minSdkVersion=24, compileSdkVersion=36, targetSdkVersion=36")
+          print("versionCode=2, versionName=1.0.1")
           PYSDK
+      - name: Verificar configuración Android para Google Play
+        run: |
+          grep -E 'minSdkVersion = 24|compileSdkVersion = 36|targetSdkVersion = 36' android/variables.gradle
+          grep -E 'versionCode 2|versionName "1.0.1"' android/app/build.gradle
 
       - name: Aplicar iconos oficiales Agenda YA
         run: |
