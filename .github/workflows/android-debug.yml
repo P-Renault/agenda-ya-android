@@ -49,6 +49,33 @@ jobs:
       - name: Crear proyecto Android nativo
         run: npx cap add android
 
+      - name: Configurar minSdkVersion 24 para Google Play
+        run: |
+          python3 - <<'PYSDK'
+          from pathlib import Path
+          import re
+
+          candidates = [Path("android/variables.gradle"), Path("android/app/build.gradle")]
+          changed = []
+          for path in candidates:
+              if not path.is_file():
+                  continue
+              content = path.read_text()
+              if path.name == "variables.gradle":
+                  updated, count = re.subn(r"(minSdkVersion\s*=\s*)23\b", r"\g<1>24", content)
+              else:
+                  updated, count = re.subn(r"(minSdkVersion\s+)23\b", r"\g<1>24", content)
+                  if count == 0:
+                      updated, count = re.subn(r"(minSdk\s*=\s*)23\b", r"\g<1>24", content)
+              if count:
+                  path.write_text(updated)
+                  changed.append(str(path))
+
+          if not changed:
+              raise SystemExit("No se encontró minSdkVersion 23 en variables.gradle ni app/build.gradle; revisar plantilla Capacitor")
+          print("minSdkVersion actualizado a 24 en: " + ", ".join(changed))
+          PYSDK
+
       - name: Aplicar iconos oficiales Agenda YA
         run: |
           mkdir -p android/app/src/main/res
